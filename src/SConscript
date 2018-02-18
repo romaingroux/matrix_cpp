@@ -1,0 +1,24 @@
+
+# compilation flags
+ccflags = "-std=c++11 -O2 -Wall -Wextra -Werror -Wfatal-errors -pedantic"
+
+# a path which should be added to all include directive to make them correct
+cpppath = "../src/"
+
+# library to use and the library path
+libs      = ['libUnitTest++']
+libs_path = []
+
+# Source files:
+tests_src  = Glob("Unittests/*.cpp")
+
+# Source file containing main()
+main_tests_src  = Glob("unittests.cpp")
+
+# compilation instructions for every module
+tests_obj      = Object(tests_src,      CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
+main_tests_obj = Object(main_tests_src, CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
+
+# clustering program compilation
+Program("unittests", main_tests_obj + tests_obj, CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
+
