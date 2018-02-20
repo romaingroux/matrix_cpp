@@ -45,8 +45,9 @@ std::vector<size_t> convert_to_coord(const Matrix<int>& m, size_t offset)
 
 
 // Matrix test suite
-SUITE(Matrix_test_suite)
-{   TEST(message)
+SUITE(Matrix)
+{   // displays message
+    TEST(message)
     {   std::cout << "Starting Matrix tests..." << std::endl ; }
 
     // tests normal constructor
@@ -346,7 +347,11 @@ SUITE(Matrix_test_suite)
             {   CHECK_EQUAL(m3.get(j), m3(convert_to_coord(m3, j))) ; }
         }
     }
+}
 
-
+SUITE(Matrix2D)
+{   // displays message
+    TEST(message)
+    {   std::cout << "Starting Matrix2D tests..." << std::endl ; }
 
 }

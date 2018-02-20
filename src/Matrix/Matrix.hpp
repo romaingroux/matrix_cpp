@@ -70,7 +70,7 @@ class Matrix
 {
     public:
         // constructors
-        Matrix() = delete ;
+        Matrix() = default ;
         /*!
          * \brief Constructs an matrix with the given dimension with
          * 0 values.
@@ -95,6 +95,7 @@ class Matrix
          * \return the element.
          */
         T get(size_t offset) const throw(std::out_of_range) ;
+
         /*!
          * \brief Gets the element at the given coordinates.
          * \param coord the coordinates of the element to get.
@@ -195,8 +196,15 @@ class Matrix
          */
         const T& operator () (const std::vector<size_t>& coord) const ;
 
-    private:
+    protected:
         // methods
+        /*!
+         * \brief Computes the partial dimension products and fills
+         * this->dim_prod according to the current values of
+         * this->_dim and this->dim_size.
+         */
+        void compute_dim_product() ;
+
         /*!
          * \brief Given a vector of at least 2 dimensional coordinates,
          * it simply swaps the elements at index 0 (row number) and 1
@@ -310,14 +318,7 @@ Matrix<T>::Matrix(const std::vector<size_t>& dim, T value)
     this->_data_size = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<T>()) ;
     this->_data      = std::vector<T>(this->_data_size, value) ;
 
-    this->_dim_prod = std::vector<size_t>(this->_dim_size, 0) ;
-    this->_dim_prod[0] = 1 ;
-    if(this->_dim_size > 1)
-    {   this->_dim_prod[1] = this->_dim[0] ; }
-    if(this->_dim_size > 2)
-    {   for(size_t i=2; i<this->_dim_size; i++)
-        {   this->_dim_prod[i] = this->_dim_prod[i-1]*this->_dim[i-1] ; }
-    }
+    this->compute_dim_product() ;
 }
 
 
@@ -415,6 +416,19 @@ template<class T>
 const T& Matrix<T>::operator () (const std::vector<size_t>& coord) const
 {   std::vector<size_t> coord_new = this->swap_coord(coord) ;
     return this->_data[this->convert_to_offset(coord_new)] ;
+}
+
+
+template<class T>
+void Matrix<T>::compute_dim_product()
+{   this->_dim_prod = std::vector<size_t>(this->_dim_size, 0) ;
+    this->_dim_prod[0] = 1 ;
+    if(this->_dim_size > 1)
+    {   this->_dim_prod[1] = this->_dim[0] ; }
+    if(this->_dim_size > 2)
+    {   for(size_t i=2; i<this->_dim_size; i++)
+        {   this->_dim_prod[i] = this->_dim_prod[i-1]*this->_dim[i-1] ; }
+    }
 }
 
 
