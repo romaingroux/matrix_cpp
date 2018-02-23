@@ -95,7 +95,25 @@ class Matrix2D : public Matrix<T>
          */
         std::vector<T> get_col(size_t i) const throw (std::out_of_range) ;
 
+        /*!
+         * \brief Sets the values of a given rows with the values of a given
+         * vector.
+         * \param i the row of interest.
+         * \param values the new values.
+         * \throw std::out_of_range if i is out of range.
+         * \throw std::invalid_argument if values does not have a length equal
+         * to the number of columns of the matrix.
+         */
         void set_row(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
+        /*!
+         * \brief Sets the values of a given column with the values of a given
+         * vector.
+         * \param i the column of interest.
+         * \param values the new values.
+         * \throw std::out_of_range if i is out of range.
+         * \throw std::invalid_argument if values does not have a length equal
+         * to the number of rows of the matrix.
+         */
         void set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
 
         // operators
