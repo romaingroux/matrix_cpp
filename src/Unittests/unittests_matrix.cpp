@@ -3,6 +3,7 @@
 
 
 #include "Matrix/Matrix.hpp"
+#include "Matrix/Matrix2D.hpp"
 
 /*!
  * \brief Given a matrix and an offset, this methods converts
@@ -168,6 +169,7 @@ SUITE(Matrix)
     }
 
 
+    // test the set() method, set a value and then check it using get()
     TEST(set)
     {
         std::vector<size_t> dim_1, dim_2, dim_3 ;
@@ -349,9 +351,134 @@ SUITE(Matrix)
     }
 }
 
+
+
 SUITE(Matrix2D)
 {   // displays message
     TEST(message)
     {   std::cout << "Starting Matrix2D tests..." << std::endl ; }
 
+    // tests contructor
+    TEST(constructor)
+    {
+        std::vector<size_t> dim ;
+
+        // has non-0 dimensions : 1x2
+        Matrix2D<int> m1(1,2) ;
+        dim = {1,2} ;
+        CHECK_EQUAL(2, m1.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m1.get_dim(), 2) ;
+        CHECK_EQUAL(1*2, m1.get_data_size()) ;
+
+        // has a zero dimension : 0x1
+        Matrix2D<int> m2(0,1) ;
+        dim = {0,1} ;
+        CHECK_EQUAL(2, m2.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m2.get_dim(), 2) ;
+        CHECK_EQUAL(0*1, m2.get_data_size()) ;
+
+        // has zero dimensions :  0x0
+        Matrix2D<int> m3(0,0) ;
+        dim = {0,0} ;
+        CHECK_EQUAL(2, m3.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m3.get_dim(), 2) ;
+        CHECK_EQUAL(0*0, m3.get_data_size()) ;
+    }
+
+    // tests contructor with value
+    TEST(constructor_value)
+    {
+        for(size_t i=1; i<11; i++)
+        {   std::vector<size_t> dim ;
+
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            Matrix2D<int> m1(i,i+1, i) ;
+            dim = {i,i+1} ;
+            CHECK_EQUAL(2, m1.get_dim_size()) ;
+            CHECK_ARRAY_EQUAL(dim, m1.get_dim(), 2) ;
+            CHECK_EQUAL(i*(i+1), m1.get_data_size()) ;
+            for(const auto x : m1.get_data())
+            {   CHECK_EQUAL(i, x) ; }
+
+            // has a zero dimension : 0x1 / 0x2 / ...
+            Matrix2D<int> m2(0,i,i) ;
+            dim = {0,i} ;
+            CHECK_EQUAL(2, m2.get_dim_size()) ;
+            CHECK_ARRAY_EQUAL(dim, m2.get_dim(), 2) ;
+            CHECK_EQUAL(0*i, m2.get_data_size()) ;
+            for(const auto x : m2.get_data())
+            {   CHECK_EQUAL(i, x) ; }
+
+            // has zero dimensions :  0x0
+            Matrix2D<int> m3(0,0,i) ;
+            dim = {0,0} ;
+            CHECK_EQUAL(2, m3.get_dim_size()) ;
+            CHECK_ARRAY_EQUAL(dim, m3.get_dim(), 2) ;
+            CHECK_EQUAL(0*0, m3.get_data_size()) ;
+            for(const auto x : m3.get_data())
+            {   CHECK_EQUAL(i, x) ; }
+        }
+    }
+
+    TEST(consructor_file)
+    {   std::cerr << "TU AS OUBLIE LES TESTS POUR CONSTRUCTEUR DEPUIS FICHIER :-)))" << std::endl ; }
+
+    // tests the get() method, compare a value get with offset with the value get with coordinates
+    // (computed from offset)
+    TEST(get)
+    {
+        for(size_t i=1; i<11; i++)
+        {   std::vector<size_t> dim ;
+
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            Matrix2D<int> m1(i,i+1, i) ;
+            dim = {i,i+1} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(m1.get(j), m1.get(convert_to_coord(m1, j))) ; }
+
+            // has a zero dimension : 0x1 / 0x2 / ...
+            Matrix2D<int> m2(0,i,i) ;
+            dim = {0,i} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(m2.get(j), m2.get(convert_to_coord(m2, j))) ; }
+
+            // has zero dimensions :  0x0
+            Matrix2D<int> m3(0,0,i) ;
+            dim = {0,0} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(m3.get(j), m3.get(convert_to_coord(m3, j))) ; }
+        }
+    }
+
+    // test the set() method, set a value and then check it using get()
+    TEST(set)
+    {
+        for(size_t i=1; i<11; i++)
+        {   std::vector<size_t> dim ;
+
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            Matrix2D<int> m1(i,i+1, i) ;
+            dim = {i,i+1} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   m1.set(j,j) ; }
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(j, m1.get(j)) ; }
+
+            // has a zero dimension : 0x1 / 0x2 / ...
+            Matrix2D<int> m2(0,i,i) ;
+            dim = {0,i} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   m2.set(j,j) ; }
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(j, m2.get(j)) ; }
+
+            // has zero dimensions :  0x0
+            Matrix2D<int> m3(0,0,i) ;
+            dim = {0,0} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   m3.set(j,j) ; }
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(j, m3.get(j)) ; }
+        }
+    }
 }
