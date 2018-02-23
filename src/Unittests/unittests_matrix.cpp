@@ -50,7 +50,6 @@ std::ostream& operator << (std::ostream& stream, const std::vector<T>& v)
 }
 
 // Matrix test suite
-/*
 SUITE(Matrix)
 {   // displays message
     TEST(message)
@@ -394,7 +393,7 @@ SUITE(Matrix)
             {   CHECK_EQUAL(m3.get(j), m3(convert_to_coord(m3, j))) ; }
         }
     }
-} */
+}
 
 
 

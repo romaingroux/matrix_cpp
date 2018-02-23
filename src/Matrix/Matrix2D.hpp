@@ -7,6 +7,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 
 #define BUFFER_SIZE 4096
@@ -46,7 +47,7 @@ class Matrix2D : public Matrix<T>
 
         // methods overloaded in Matrix
         using Matrix<T>::get ;
-        using Matrix<T>::set ;
+        using Matrix<T>::set ;        
 
         // methods
         /*!
@@ -116,6 +117,15 @@ class Matrix2D : public Matrix<T>
          */
         void set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
 
+        /*!
+         * \brief Nicely print the matrix on the given string.
+         * \param stream the stream.
+         * \param precision the rounding precision.
+         * \param width the column width in number of characters.
+         * \param sep the character separator.
+         */
+        void print(std::ostream& stram, size_t precision=4, size_t width=6, char sep=' ') const ;
+
         // operators
         /*!
          * \brief Returns a reference to the corrresponding
@@ -138,6 +148,19 @@ class Matrix2D : public Matrix<T>
         const T& operator () (size_t row, size_t col) const ;
 
 } ;
+
+/*!
+ * \brief Allows to write the content of a matrix to a stream.
+ * \param stream the stream of interest.
+ * \param m the matrix of interest.
+ * \return a reference to the stream.
+ */
+template<class T>
+std::ostream& operator << (std::ostream& stream, const Matrix2D<T>& m)
+{   m.print(stream) ;
+    return stream ;
+}
+
 
 /*!
  * \brief Produces a transpose of the given matrix.
@@ -330,6 +353,22 @@ void Matrix2D<T>::set_col(size_t i, const std::vector<T>& values) throw (std::ou
 }
 
 template<class T>
+void Matrix2D<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
+{   stream.setf(std::ios::left) ;
+    /*
+    for(auto& row : this->data)
+    {   for(auto cell : row)
+        {   stream << std::setprecision(precision) << std::setw(width) << cell << sep ; }
+        stream << std::endl ;
+    }*/
+    for(size_t i=0; i<this->get_data_size(); i++)
+    {   stream << std::setprecision(precision) << std::setw(width) << this->_data[i] << sep ;
+        if(( i!= 0) and (i % this->get_ncol() == 0))
+        {   stream << std::endl ;}
+    }
+}
+
+template<class T>
 T& Matrix2D<T>::operator () (size_t row, size_t col)
 {   std::vector<size_t> coord = {col, row} ;
     return this->_data[this->convert_to_offset(coord)] ;
@@ -340,20 +379,6 @@ template<class T>
 const T& Matrix2D<T>::operator () (size_t row, size_t col) const
 {   std::vector<size_t> coord = {col, row} ;
     return this->_data[this->convert_to_offset(coord)] ;
-}
-
-
-template<class T>
-std::ostream& operator << (std::ostream& stream, const Matrix2D<T>& m)
-{   size_t n_data = m.get_data_size() ;
-    std::vector<size_t> dim = m.get_dim() ;
-
-    for(size_t i=0; i<n_data; i++)
-    {   stream << m.get(i) << ' ' ;
-        if((i != 0) and ((i+1) % dim[1] == 0))
-        {   stream << std::endl ; }
-    }
-    return stream ;
 }
 
 
