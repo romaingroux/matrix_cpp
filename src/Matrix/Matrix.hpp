@@ -86,6 +86,12 @@ class Matrix
          */
         Matrix(const std::vector<size_t>& dim, T value) ;
 
+        /*!
+         * \brief Copy constructor.
+         * \param other the matrix to copy.
+         */
+        Matrix (const Matrix& other) ;
+
         // methods
         /*!
          * \brief Gets the element at the given offset.
@@ -320,6 +326,10 @@ Matrix<T>::Matrix(const std::vector<size_t>& dim, T value)
 
     this->compute_dim_product() ;
 }
+
+template<class T>
+Matrix<T>::Matrix(const Matrix &other)
+{   *this = other ; }
 
 
 template<class T>

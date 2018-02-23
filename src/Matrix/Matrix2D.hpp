@@ -18,7 +18,7 @@ class Matrix2D : public Matrix<T>
 {
     public:
         // constructors
-        Matrix2D() = delete ;
+        Matrix2D() = default ;
         /*!
          * \brief Constructs a matrix with the given dimension with
          * 0 values.
@@ -33,7 +33,11 @@ class Matrix2D : public Matrix<T>
          * with.
          */
         Matrix2D(size_t nrow, size_t ncol, T value) ;
-
+        /*!
+         * \brief Copy constructor
+         * \param other
+         */
+        Matrix2D(const Matrix2D& other) ;
         /*!
          * \brief Constructs a matrix from a text file.
          * \param file_address the address of the file containing the matrix.
@@ -121,6 +125,11 @@ Matrix2D<T>::Matrix2D(size_t nrow, size_t ncol)
 template<class T>
 Matrix2D<T>::Matrix2D(size_t nrow, size_t ncol, T value)
      : Matrix<T>({nrow, ncol}, value)
+{}
+
+template<class T>
+Matrix2D<T>::Matrix2D(const Matrix2D<T>& other)
+    : Matrix<T>(other)
 {}
 
 template<class T>

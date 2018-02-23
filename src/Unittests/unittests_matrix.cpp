@@ -308,6 +308,46 @@ SUITE(Matrix)
         }
     }
 
+    // tests the copy constuctor, not before because it uses the == operator to
+    // check that the content of two matrices are equal.
+    TEST(constructor_copy)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,j) ; }
+            Matrix<int> m1_2(m1) ;
+            CHECK_EQUAL(true, m1 == m1_2) ;
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,j) ; }
+            Matrix<int> m2_2(m2) ;
+            CHECK_EQUAL(true, m2 == m2_2) ;
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,j) ; }
+            Matrix<int> m3_2(m3) ;
+            CHECK_EQUAL(true, m3 == m3_2) ;
+        }
+    }
+
     // tests the () operator
     TEST(parenthesis_operator)
     {
@@ -420,6 +460,38 @@ SUITE(Matrix2D)
         }
     }
 
+    // tests the copy constructor
+    TEST(constructor_copy)
+    {
+        for(size_t i=1; i<11; i++)
+        {   std::vector<size_t> dim ;
+
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            dim = {i, i+1} ;
+            Matrix2D<int> m1(i,i+1) ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   m1.set(j,j) ; }
+            Matrix2D<int> m1_2(m1) ;
+            CHECK_EQUAL(true, m1 == m1_2) ;
+
+            // always has a zero dimension : // has a zero dimension : 0x1 / 0x2 / ...
+            dim = {0, i} ;
+            Matrix2D<int> m2(0,i) ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   m2.set(j,j) ; }
+            Matrix2D<int> m2_2(m2) ;
+            CHECK_EQUAL(true, m2 == m2_2) ;
+
+            // is a 0 dimension matrix : 0x0
+            dim = {0, 0} ;
+            Matrix2D<int> m3(0,0) ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   m3.set(j,j) ; }
+            Matrix2D<int> m3_2(m3) ;
+            CHECK_EQUAL(true, m3 == m3_2) ;
+        }
+    }
+
     TEST(consructor_file)
     {   std::cerr << "TU AS OUBLIE LES TESTS POUR CONSTRUCTEUR DEPUIS FICHIER :-)))" << std::endl ; }
 
@@ -449,6 +521,7 @@ SUITE(Matrix2D)
             {   CHECK_EQUAL(m3.get(j), m3.get(convert_to_coord(m3, j))) ; }
         }
     }
+
 
     // test the set() method, set a value and then check it using get()
     TEST(set)
