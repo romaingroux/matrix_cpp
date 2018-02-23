@@ -58,7 +58,6 @@ class Matrix2D : public Matrix<T>
          * \return the element.
          */
         T get(size_t row, size_t col) const throw(std::out_of_range) ;
-
         /*!
          * \brief Sets the element at the given coordinates
          * to the given value.
@@ -69,6 +68,35 @@ class Matrix2D : public Matrix<T>
          * are out of range.
          */
         void set(size_t row, size_t col, T value) throw (std::out_of_range) ;
+
+        /*!
+         * \brief Gets the number of rows.
+         * \return the number of rows.
+         */
+        size_t get_nrow() const ;
+        /*!
+         * \brief Gets the number of columns.
+         * \return the number of columns.
+         */
+        size_t get_ncol() const ;
+
+        /*!
+         * \brief Gets the values in the i-th row.
+         * \param i the row of interest.
+         * \throw std::out_of_range if i is out of range.
+         * \return the values in this row.
+         */
+        std::vector<T> get_row(size_t i) const throw (std::out_of_range) ;
+        /*!
+         * \brief Gets the values in the i-th column.
+         * \param i the column of interest.
+         * \throw std::out_of_range if i is out of range.
+         * \return the values in this column.
+         */
+        std::vector<T> get_col(size_t i) const throw (std::out_of_range) ;
+
+        void set_row(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
+        void set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
 
         // operators
         /*!
@@ -134,7 +162,7 @@ Matrix2D<T>::Matrix2D(const Matrix2D<T>& other)
 
 template<class T>
 Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error)
-    : Matrix<T>({0,0})
+//    : Matrix<T>({0,0})
 {
     this->_dim       = {0,0} ;
     this->_data      = std::vector<T>() ;
@@ -223,6 +251,65 @@ void Matrix2D<T>::set(size_t row, size_t col, T value) throw(std::out_of_range)
     {   throw e ; }
 }
 
+
+template<class T>
+size_t Matrix2D<T>::get_nrow() const
+{   return this->_dim[1] ; }
+
+
+template<class T>
+size_t Matrix2D<T>::get_ncol() const
+{   return this->_dim[0] ; }
+
+
+template<class T>
+std::vector<T> Matrix2D<T>::get_row(size_t i) const throw (std::out_of_range)
+{   if(i>=this->get_nrow())
+    {   throw std::out_of_range("row index is out of range!") ; }
+
+    std::vector<T> row(this->get_ncol()) ;
+    for(size_t j=i*this->get_ncol(), n=0; n<this->get_ncol(); j++, n++)
+    {   row[n] = this->_data[j] ; }
+
+    return row ;
+}
+
+
+template<class T>
+std::vector<T> Matrix2D<T>::get_col(size_t i) const throw (std::out_of_range)
+{   if(i>=this->get_ncol())
+    {   throw std::out_of_range("column index is out of range!") ; }
+
+    std::vector<T> col(this->get_nrow()) ;
+    for(size_t j=i, n=0; n<this->get_nrow(); j+=this->get_ncol(), n++)
+    {   col[n] = this->_data[j] ; }
+
+    return col ;
+}
+
+
+template<class T>
+void Matrix2D<T>::set_row(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument)
+{   if(i>=this->get_nrow())
+    {   throw std::out_of_range("row index is out of range!") ; }
+    else if(values.size() != this->get_ncol())
+    {   throw std::invalid_argument("the given vector length is not equal to the number of columns!") ; }
+
+    for(size_t j=i*this->get_ncol(), n=0; n<this->get_ncol(); j++, n++)
+    {   this->_data[j] = values[n] ; }
+}
+
+
+template<class T>
+void Matrix2D<T>::set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument)
+{   if(i>=this->get_ncol())
+    {   throw std::out_of_range("row index is out of range!") ; }
+    else if(values.size() != this->get_nrow())
+    {   throw std::invalid_argument("the given vector length is not equal to the number of rows!") ; }
+
+    for(size_t n=0, j=i; n<this->get_nrow(); n++, j+=this->get_ncol())
+    {   this->_data[j] = values[n] ; }
+}
 
 template<class T>
 T& Matrix2D<T>::operator () (size_t row, size_t col)

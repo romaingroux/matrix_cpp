@@ -461,7 +461,7 @@ bool Matrix<T>::is_valid(size_t offset) const
 
 template<class T>
 bool Matrix<T>::is_valid(const std::vector<size_t>& coord) const
-{   if(coord.size() > this->_dim_size)
+{   if(coord.size() != this->_dim_size)
     {   return false ; }
     for(size_t i=0; i<coord.size(); i++)
     {   if(coord[i] > this->_dim[i])
@@ -479,7 +479,6 @@ size_t Matrix<T>::convert_to_offset(const std::vector<size_t>& coord) const
     for(size_t i=0; i<this->_dim_size; i++)
     {   offset += coord[i] * this->_dim_prod[i] ; }
 
-    // std::cerr << " coord_to_offset " <<  "  " << coord << "    " << offset << "    " << this->convert_to_coord(offset) << std::endl ;
     return offset ;
 }
 

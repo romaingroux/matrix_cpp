@@ -42,10 +42,15 @@ std::vector<size_t> convert_to_coord(const Matrix<int>& m, size_t offset)
     return coord ;
 }
 
-
-
+template<class T>
+std::ostream& operator << (std::ostream& stream, const std::vector<T>& v)
+{   for(const auto& i : v)
+    {   stream << i << ' ' ; }
+    return stream ;
+}
 
 // Matrix test suite
+/*
 SUITE(Matrix)
 {   // displays message
     TEST(message)
@@ -389,7 +394,7 @@ SUITE(Matrix)
             {   CHECK_EQUAL(m3.get(j), m3(convert_to_coord(m3, j))) ; }
         }
     }
-}
+} */
 
 
 
@@ -492,9 +497,6 @@ SUITE(Matrix2D)
         }
     }
 
-    TEST(consructor_file)
-    {   std::cerr << "TU AS OUBLIE LES TESTS POUR CONSTRUCTEUR DEPUIS FICHIER :-)))" << std::endl ; }
-
     // tests the get() method, compare a value get with offset with the value get with coordinates
     // (computed from offset)
     TEST(get)
@@ -553,5 +555,171 @@ SUITE(Matrix2D)
             for(size_t j=0; j<dim[0]*dim[1]; j++)
             {   CHECK_EQUAL(j, m3.get(j)) ; }
         }
+    }
+
+    // tests get_nrow()
+    TEST(get_nrow)
+    {   for(size_t i=1; i<11; i++)
+        {
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            Matrix2D<int> m1(i,i+1) ;
+            CHECK_EQUAL(i, m1.get_nrow()) ;
+
+            // always has a zero dimension : // has a zero dimension : 0x1 / 0x2 / ...
+            Matrix2D<int> m2(0,i) ;
+            CHECK_EQUAL(0, m2.get_nrow()) ;
+
+            // is a 0 dimension matrix : 0x0
+            Matrix2D<int> m3(0,0) ;
+            CHECK_EQUAL(0, m3.get_nrow()) ;
+        }
+    }
+
+    // tests get_ncol()
+    TEST(get_ncol)
+    {   for(size_t i=1; i<11; i++)
+        {
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            Matrix2D<int> m1(i,i+1) ;
+            CHECK_EQUAL(i+1, m1.get_ncol()) ;
+
+            // always has a zero dimension : // has a zero dimension : 0x1 / 0x2 / ...
+            Matrix2D<int> m2(0,i) ;
+            CHECK_EQUAL(i, m2.get_ncol()) ;
+
+            // is a 0 dimension matrix : 0x0
+            Matrix2D<int> m3(0,0) ;
+            CHECK_EQUAL(0, m3.get_ncol()) ;
+        }
+    }
+
+    // tests get_row()
+    TEST(get_row)
+    {   for(size_t i=0; i<11; i++)
+        {
+            Matrix2D<int> m(5,i) ;
+            for(size_t j=0; j<m.get_nrow()*m.get_ncol(); j++)
+            {   m.set(j, j) ; }
+
+            for(size_t j=0; j<m.get_nrow(); j++)
+            {
+                std::vector<int> row(m.get_ncol()) ;
+                for(size_t n=0, k=j*m.get_ncol(); n<m.get_ncol(); n++, k++)
+                {   row[n] = k ; }
+
+                CHECK_EQUAL(i, m.get_row(j).size()) ;
+                CHECK_ARRAY_EQUAL(row, m.get_row(j), row.size()) ;
+            }
+            CHECK_THROW(m.get_row(9999), std::out_of_range) ;
+        }
+    }
+
+    // tests get_col()
+    TEST(get_col)
+    {   for(size_t i=4; i<5; i++)
+        {
+            Matrix2D<int> m(i,5) ;
+            for(size_t j=0; j<m.get_nrow()*m.get_ncol(); j++)
+            {   m.set(j, j) ; }
+
+            for(size_t j=0; j<m.get_ncol(); j++)
+            {
+                std::vector<int> col(m.get_nrow()) ;
+                for(size_t n=0, k=j; n<m.get_nrow(); n++, k+=m.get_ncol())
+                {   col[n] = k ; }
+
+                CHECK_EQUAL(i, m.get_col(j).size()) ;
+                CHECK_ARRAY_EQUAL(col, m.get_col(j), col.size()) ;
+            }
+            CHECK_THROW(m.get_col(9999), std::out_of_range) ;
+        }
+    }
+
+    // tests set_row()
+    TEST(set_row)
+    {   for(size_t i=0; i<11; i++)
+        {
+            Matrix2D<int> m(5,i) ;
+            for(size_t j=0; j<m.get_nrow()*m.get_ncol(); j++)
+            {   m.set(j, j) ; }
+
+            for(size_t j=0; j<m.get_nrow(); j++)
+            {   std::vector<int> new_row(i, 999) ;
+                m.set_row(j, new_row) ;
+                CHECK_EQUAL(i, m.get_row(j).size()) ;
+                CHECK_ARRAY_EQUAL(new_row, m.get_row(j), new_row.size()) ;
+            }
+
+            CHECK_THROW(m.set_row(9999, std::vector<int>(i,0)),   std::out_of_range) ;
+            CHECK_THROW(m.set_row(0,    std::vector<int>(i+1,0)), std::invalid_argument) ;
+        }
+    }
+
+    // tests set_col()
+    TEST(set_col)
+    {   for(size_t i=0; i<11; i++)
+        {
+            Matrix2D<int> m(i,5) ;
+            for(size_t j=0; j<m.get_nrow()*m.get_ncol(); j++)
+            {   m.set(j, j) ; }
+
+            for(size_t j=0; j<m.get_ncol(); j++)
+            {   std::vector<int> new_col(i, 999) ;
+                m.set_col(j, new_col) ;
+                CHECK_EQUAL(i, m.get_col(j).size()) ;
+                CHECK_ARRAY_EQUAL(new_col, m.get_col(j), new_col.size()) ;
+            }
+            CHECK_THROW(m.set_col(9999, std::vector<int>(i,0)),   std::out_of_range) ;
+            CHECK_THROW(m.set_col(0,    std::vector<int>(i+1,0)), std::invalid_argument) ;
+        }
+    }
+
+    // tests contructor from file
+    // now because it uses previously tested methods
+    TEST(constructor_file)
+    {   std::string file_int1("./src/Unittests/data/matrix2d_int1.mat") ;
+        std::string file_int2("./src/Unittests/data/matrix2d_int2.mat") ;
+        std::string file_int3("./src/Unittests/data/matrix2d_int3.mat") ;
+        std::string file_int4("./src/Unittests/data/matrix2d_int4.mat") ;
+        std::string file_int5("./src/Unittests/data/matrix2d_int5.mat") ;
+        std::string file_int6("./src/Unittests/data/matrix2d_int6.mat") ;
+
+        std::string file_char1("./src/Unittests/data/matrix2d_char1.mat") ;
+        std::string file_double1("./src/Unittests/data/matrix2d_double1.mat") ;
+        std::string file_ghost("./src/Unittests/data/foo.mat") ;
+
+
+        std::vector<std::vector<int>>     v_int({{0,1,2,3},{4,5,6,7}}) ;
+        std::vector<std::vector<char>>    v_char({{'A','A','A'},{'C','C','C'},
+                                                  {'G','G','G'},{'T','T','T'}}) ;
+        std::vector<std::vector<double>>  v_double({{0.,1.,2.,3.},{4.,5.,6.,7.}}) ;
+
+        Matrix2D<int>  m_int(2,4)  ;  m_int.set_row(0, {0,1,2,3}) ; m_int.set_row(1, {4,5,6,7}) ;
+        Matrix2D<char> m_char(4,3) ;  m_char.set_row(0, {'A','A','A'}) ; m_char.set_row(1, {'C','C','C'}) ;
+                                      m_char.set_row(2, {'G','G','G'}) ; m_char.set_row(3, {'T','T','T'}) ;
+        Matrix2D<double> m_dbl(2,4) ; m_dbl.set_row(0, {0.,1.,2.,3.}) ; m_dbl.set_row(1, {4.,5.,6.,7.}) ;
+
+        // matrix of int
+        Matrix2D<int> m_int1(file_int1) ; // this one is perfect
+        Matrix2D<int> m_int2(file_int2) ; // this one has inhomogeneous spaceers but is OK
+        CHECK_EQUAL(m_int, m_int1) ;
+        CHECK_EQUAL(m_int, m_int2) ;
+
+        // these files are not well formatted
+        CHECK_THROW(m_int2 = Matrix2D<int>(file_int3), std::runtime_error) ; // data are inhomogeneous
+        CHECK_THROW(m_int2 = Matrix2D<int>(file_int4), std::runtime_error) ; // empty line
+        CHECK_THROW(m_int2 = Matrix2D<int>(file_int5), std::runtime_error) ; // empty line
+        CHECK_THROW(m_int2 = Matrix2D<int>(file_int6), std::runtime_error) ; // empty line
+
+        // matrix of char
+        Matrix2D<char> m_char1(file_char1) ;
+        CHECK_EQUAL(m_char, m_char1) ;
+
+        // matrix of double
+        Matrix2D<double> m_dbl1(file_double1) ;
+        CHECK_EQUAL(m_dbl, m_dbl1) ;
+
+        // file does not exist
+        CHECK_THROW(Matrix2D<int> m_int2(file_ghost), std::runtime_error) ;
     }
 }
