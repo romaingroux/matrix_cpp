@@ -4,6 +4,7 @@
 
 #include "Matrix/Matrix.hpp"
 #include "Matrix/Matrix2D.hpp"
+#include "Matrix/Matrix3D.hpp"
 
 /*!
  * \brief Given a matrix and an offset, this methods converts
@@ -48,7 +49,7 @@ std::ostream& operator << (std::ostream& stream, const std::vector<T>& v)
     {   stream << i << ' ' ; }
     return stream ;
 }
-
+/*
 // Matrix test suite
 SUITE(Matrix)
 {   // displays message
@@ -395,7 +396,7 @@ SUITE(Matrix)
     }
 }
 
-
+*/
 
 SUITE(Matrix2D)
 {   // displays message
@@ -404,63 +405,32 @@ SUITE(Matrix2D)
 
     // tests contructor
     TEST(constructor)
-    {
-        std::vector<size_t> dim ;
-
-        // has non-0 dimensions : 1x2
-        Matrix2D<int> m1(1,2) ;
-        dim = {1,2} ;
-        CHECK_EQUAL(2, m1.get_dim_size()) ;
-        CHECK_ARRAY_EQUAL(dim, m1.get_dim(), 2) ;
-        CHECK_EQUAL(1*2, m1.get_data_size()) ;
-
-        // has a zero dimension : 0x1
-        Matrix2D<int> m2(0,1) ;
-        dim = {0,1} ;
-        CHECK_EQUAL(2, m2.get_dim_size()) ;
-        CHECK_ARRAY_EQUAL(dim, m2.get_dim(), 2) ;
-        CHECK_EQUAL(0*1, m2.get_data_size()) ;
-
-        // has zero dimensions :  0x0
-        Matrix2D<int> m3(0,0) ;
-        dim = {0,0} ;
-        CHECK_EQUAL(2, m3.get_dim_size()) ;
-        CHECK_ARRAY_EQUAL(dim, m3.get_dim(), 2) ;
-        CHECK_EQUAL(0*0, m3.get_data_size()) ;
+    {   for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   std::vector<size_t> dim = {i,j} ;
+                Matrix2D<int> m(i,j) ;
+                CHECK_EQUAL(dim.size(), m.get_dim_size()) ;
+                CHECK_ARRAY_EQUAL(dim, m.get_dim(), dim.size()) ;
+                CHECK_EQUAL(std::accumulate(begin(dim), end(dim), 1, std::multiplies<int>()),
+                            m.get_data_size()) ;
+            }
+        }
     }
 
     // tests contructor with value
     TEST(constructor_value)
-    {
-        for(size_t i=1; i<11; i++)
-        {   std::vector<size_t> dim ;
-
-            // has non-0 dimensions : 1x2 / 2x3 / ...
-            Matrix2D<int> m1(i,i+1, i) ;
-            dim = {i,i+1} ;
-            CHECK_EQUAL(2, m1.get_dim_size()) ;
-            CHECK_ARRAY_EQUAL(dim, m1.get_dim(), 2) ;
-            CHECK_EQUAL(i*(i+1), m1.get_data_size()) ;
-            for(const auto x : m1.get_data())
-            {   CHECK_EQUAL(i, x) ; }
-
-            // has a zero dimension : 0x1 / 0x2 / ...
-            Matrix2D<int> m2(0,i,i) ;
-            dim = {0,i} ;
-            CHECK_EQUAL(2, m2.get_dim_size()) ;
-            CHECK_ARRAY_EQUAL(dim, m2.get_dim(), 2) ;
-            CHECK_EQUAL(0*i, m2.get_data_size()) ;
-            for(const auto x : m2.get_data())
-            {   CHECK_EQUAL(i, x) ; }
-
-            // has zero dimensions :  0x0
-            Matrix2D<int> m3(0,0,i) ;
-            dim = {0,0} ;
-            CHECK_EQUAL(2, m3.get_dim_size()) ;
-            CHECK_ARRAY_EQUAL(dim, m3.get_dim(), 2) ;
-            CHECK_EQUAL(0*0, m3.get_data_size()) ;
-            for(const auto x : m3.get_data())
-            {   CHECK_EQUAL(i, x) ; }
+    {   int n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   std::vector<size_t> dim = {i,j} ;
+                Matrix2D<int> m(i,j,n) ;
+                CHECK_EQUAL(dim.size(), m.get_dim_size()) ;
+                CHECK_ARRAY_EQUAL(dim, m.get_dim(), dim.size()) ;
+                CHECK_EQUAL(std::accumulate(begin(dim), end(dim), 1, std::multiplies<int>()),
+                            m.get_data_size()) ;
+                for(const auto& i : m.get_data())
+                {   CHECK_EQUAL(n, i) ; }
+            }
         }
     }
 
@@ -507,19 +477,23 @@ SUITE(Matrix2D)
             Matrix2D<int> m1(i,i+1, i) ;
             dim = {i,i+1} ;
             for(size_t j=0; j<dim[0]*dim[1]; j++)
-            {   CHECK_EQUAL(m1.get(j), m1.get(convert_to_coord(m1, j))) ; }
+            {   std::vector<size_t> coord = convert_to_coord(m1, j) ;
+                CHECK_EQUAL(m1.get(j), m1.get(coord[0], coord[1])) ; }
 
             // has a zero dimension : 0x1 / 0x2 / ...
             Matrix2D<int> m2(0,i,i) ;
             dim = {0,i} ;
             for(size_t j=0; j<dim[0]*dim[1]; j++)
-            {   CHECK_EQUAL(m2.get(j), m2.get(convert_to_coord(m2, j))) ; }
+            {   std::vector<size_t> coord = convert_to_coord(m2, j) ;
+                CHECK_EQUAL(m2.get(j), m2.get(coord[0], coord[1])) ; }
 
             // has zero dimensions :  0x0
             Matrix2D<int> m3(0,0,i) ;
             dim = {0,0} ;
             for(size_t j=0; j<dim[0]*dim[1]; j++)
-            {   CHECK_EQUAL(m3.get(j), m3.get(convert_to_coord(m3, j))) ; }
+            {   std::vector<size_t> coord = convert_to_coord(m3, j) ;
+                CHECK_EQUAL(m3.get(j), m3.get(coord[0], coord[1])) ;
+            }
         }
     }
 
@@ -534,7 +508,9 @@ SUITE(Matrix2D)
             Matrix2D<int> m1(i,i+1, i) ;
             dim = {i,i+1} ;
             for(size_t j=0; j<dim[0]*dim[1]; j++)
-            {   m1.set(j,j) ; }
+            {   std::vector<size_t> coord = convert_to_coord(m1, j) ;
+                m1.set(coord[0], coord[1], j) ;
+            }
             for(size_t j=0; j<dim[0]*dim[1]; j++)
             {   CHECK_EQUAL(j, m1.get(j)) ; }
 
@@ -542,7 +518,9 @@ SUITE(Matrix2D)
             Matrix2D<int> m2(0,i,i) ;
             dim = {0,i} ;
             for(size_t j=0; j<dim[0]*dim[1]; j++)
-            {   m2.set(j,j) ; }
+            {   std::vector<size_t> coord = convert_to_coord(m2, j) ;
+                m2.set(coord[0], coord[1], j) ;
+            }
             for(size_t j=0; j<dim[0]*dim[1]; j++)
             {   CHECK_EQUAL(j, m2.get(j)) ; }
 
@@ -550,7 +528,9 @@ SUITE(Matrix2D)
             Matrix2D<int> m3(0,0,i) ;
             dim = {0,0} ;
             for(size_t j=0; j<dim[0]*dim[1]; j++)
-            {   m3.set(j,j) ; }
+            {   std::vector<size_t> coord = convert_to_coord(m3, j) ;
+                m3.set(coord[0], coord[1], j) ;
+            }
             for(size_t j=0; j<dim[0]*dim[1]; j++)
             {   CHECK_EQUAL(j, m3.get(j)) ; }
         }
@@ -673,6 +653,43 @@ SUITE(Matrix2D)
         }
     }
 
+    TEST(parenthesis_operator)
+    {   for(size_t i=1; i<11; i++)
+        {   std::vector<size_t> dim ;
+
+            // has non-0 dimensions : 1x2 / 2x3 / ...
+            Matrix2D<int> m1(i,i+1, i) ;
+            dim = {i,i+1} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   std::vector<size_t> coord = convert_to_coord(m1, j) ;
+                m1(coord[0], coord[1]) = j ;
+            }
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(j, m1.get(j)) ; }
+
+            // has a zero dimension : 0x1 / 0x2 / ...
+            Matrix2D<int> m2(0,i,i) ;
+            dim = {0,i} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   std::vector<size_t> coord = convert_to_coord(m2, j) ;
+                m2(coord[0], coord[1]) = j ;
+            }
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(j, m2.get(j)) ; }
+
+            // has zero dimensions :  0x0
+            Matrix2D<int> m3(0,0,i) ;
+            dim = {0,0} ;
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   std::vector<size_t> coord = convert_to_coord(m3, j) ;
+                m3(coord[0], coord[1]) = j ;
+            }
+            for(size_t j=0; j<dim[0]*dim[1]; j++)
+            {   CHECK_EQUAL(j, m3.get(j)) ; }
+        }
+
+    }
+
     // tests contructor from file
     // now because it uses previously tested methods
     TEST(constructor_file)
@@ -720,5 +737,179 @@ SUITE(Matrix2D)
 
         // file does not exist
         CHECK_THROW(Matrix2D<int> m_int2(file_ghost), std::runtime_error) ;
+    }
+}
+
+
+SUITE(Matrix3D)
+{   // displays message
+    TEST(message)
+    {   std::cout << "Starting Matrix3D tests..." << std::endl ; }
+
+    // tests constructor
+    TEST(constructor)
+    {   for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   std::vector<size_t> dim = {i,j,k} ;
+                    Matrix3D<int> m(i,j,k) ;
+                    CHECK_EQUAL(dim.size(), m.get_dim_size()) ;
+                    CHECK_ARRAY_EQUAL(dim, m.get_dim(), dim.size()) ;
+                    CHECK_EQUAL(std::accumulate(begin(dim), end(dim), 1, std::multiplies<int>()),
+                                m.get_data_size()) ;
+                }
+            }
+        }
+    }
+
+    TEST(constructor_file)
+    {   std::string file_int1("./src/Unittests/data/matrix3d_int1.mat") ;
+        std::string file_int2("./src/Unittests/data/matrix3d_int2.mat") ;
+        std::string file_int3("./src/Unittests/data/matrix3d_int3.mat") ;
+        std::string file_int4("./src/Unittests/data/matrix3d_int4.mat") ;
+        std::string file_int5("./src/Unittests/data/matrix3d_int5.mat") ;
+        std::string file_int6("./src/Unittests/data/matrix3d_int6.mat") ;
+        std::string file_int7("./src/Unittests/data/matrix3d_int7.mat") ;
+        std::string file_int8("./src/Unittests/data/matrix3d_int8.mat") ;
+        std::string file_int9("./src/Unittests/data/matrix3d_int9.mat") ;
+        std::string file_int10("./src/Unittests/data/matrix3d_int10.mat") ;
+        std::string file_int11("./src/Unittests/data/matrix3d_int11.mat") ;
+        std::string file_double("./src/Unittests/data/matrix3d_double.mat") ;
+        std::string file_ghost("./src/Unittests/data/foo.mat") ;
+
+
+        std::vector<int> v_int = {-1,0,2,0,
+                                   0,3,0,4,
+                                   0,0,0,0,
+                                   0,0,0,0,
+                                   0,5,-6,0,
+                                   0,7,0,0} ;
+
+        std::vector<double> v_dbl = {-1.,0., 2.,0.,
+                                      0.,3., 0.,4.,
+                                      0.,0., 0.,0.,
+                                      0.,0., 0.,0.,
+                                      0.,5.,-6.,0.,
+                                      0.,7., 0.,0.} ;
+
+        std::vector<size_t> dim = {2,4,3} ;
+
+        // matrix of int
+        Matrix3D<int> m_int(file_int1) ;
+        CHECK_EQUAL(dim.size(), m_int.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m_int.get_dim(), dim.size()) ;
+        CHECK_EQUAL(v_int.size(), m_int.get_data_size()) ;
+        CHECK_ARRAY_EQUAL(v_int, m_int.get_data(), v_int.size()) ;
+
+        // these files are not well formatted
+        CHECK_THROW(Matrix3D<int> m_int2(file_int2),  std::runtime_error) ; // mixed data types
+        CHECK_THROW(Matrix3D<int> m_int2(file_int3),  std::runtime_error) ; // slice of variable dim
+        CHECK_THROW(Matrix3D<int> m_int2(file_int4),  std::runtime_error) ; // slice of variable dim
+        CHECK_THROW(Matrix3D<int> m_int2(file_int5),  std::runtime_error) ; // slice of variable dim
+        CHECK_THROW(Matrix3D<int> m_int2(file_int6),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int2(file_int7),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int2(file_int8),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int2(file_int9),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int2(file_int10), std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int2(file_int11), std::runtime_error) ;  // empty line
+
+        // this file does not exist
+        CHECK_THROW(Matrix3D<int> m_int2(file_ghost), std::runtime_error) ;
+
+        // matrix of double
+        Matrix3D<double> m_double(file_double) ;
+        CHECK_EQUAL(dim.size(), m_double.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m_double.get_dim(), dim.size()) ;
+        CHECK_EQUAL(v_int.size(), m_double.get_data_size()) ;
+        CHECK_ARRAY_EQUAL(v_int, m_double.get_data(), v_int.size()) ;
+    }
+
+
+    // test constructor value
+    TEST(constructor_value)
+    {   int  n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   std::vector<size_t> dim = {i,j,k} ;
+                    Matrix3D<int> m(i,j,k,n) ;
+                    CHECK_EQUAL(dim.size(), m.get_dim_size()) ;
+                    CHECK_ARRAY_EQUAL(dim, m.get_dim(), dim.size()) ;
+                    CHECK_EQUAL(std::accumulate(begin(dim), end(dim), 1, std::multiplies<int>()),
+                                m.get_data_size()) ;
+                    for(const auto& i : m.get_data())
+                    {   CHECK_EQUAL(n, i) ; }
+                }
+            }
+        }
+    }
+
+    // tests copy constructor
+    TEST(constructor_copy)
+    {   int  n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   std::vector<size_t> dim = {i,j,k} ;
+                    Matrix3D<int> m(i,j,k,n) ;
+                    Matrix3D<int> m2(m) ;
+                    CHECK_EQUAL(m, m2) ;
+                }
+            }
+        }
+    }
+
+    // tests get()
+    TEST(get)
+    {   int n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   std::vector<size_t> dim = {i,j,k} ;
+                    Matrix3D<int> m(i,j,k,n) ;
+                    for(size_t l=0; l<m.get_data_size(); l++)
+                    {   std::vector<size_t> coord = convert_to_coord(m, l) ;
+                        CHECK_EQUAL(m.get(l), m.get(coord[0], coord[1], coord[2])) ;
+                    }
+                }
+            }
+        }
+    }
+
+    // tests set()
+    TEST(set)
+    {   int n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   std::vector<size_t> dim = {i,j,k} ;
+                    Matrix3D<int> m(i,j,k,n) ;
+                    for(size_t l=0; l<m.get_data_size(); l++)
+                    {   std::vector<size_t> coord = convert_to_coord(m, l) ;
+                        m.set(coord[0], coord[1], coord[2], l) ;
+                    }
+                    for(size_t l=0; l<m.get_data_size(); l++)
+                    {   CHECK_EQUAL(l, m.get(l)) ; }
+                }
+            }
+        }
+    }
+
+    TEST(paenthesis_operator)
+    {   int n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   std::vector<size_t> dim = {i,j,k} ;
+                    Matrix3D<int> m(i,j,k,n) ;
+                    for(size_t l=0; l<m.get_data_size(); l++)
+                    {   std::vector<size_t> coord = convert_to_coord(m, l) ;
+                        m(coord[0], coord[1], coord[2]) = l ;
+                    }
+                    for(size_t l=0; l<m.get_data_size(); l++)
+                    {   CHECK_EQUAL(l, m.get(l)) ; }
+                }
+            }
+        }
     }
 }

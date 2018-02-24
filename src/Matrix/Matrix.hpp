@@ -298,7 +298,7 @@ class Matrix
 
 
 /*!
- * \brief Allows to write the content of a matrix to a stream.
+ * \brief Sends a representation of the matrix to the stream.
  * \param stream the stream of interest.
  * \param m the matrix of interest.
  * \return a reference to the stream.

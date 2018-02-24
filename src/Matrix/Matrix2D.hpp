@@ -12,7 +12,21 @@
 
 #define BUFFER_SIZE 4096
 
-/*! The Matrix2D class implements 2D matrices.
+/*! The Matrix2D class is a specialisation of the Matrix
+ * class to make work with 2D matrices easier.
+ *
+ * A text format is defined to store such matrices.
+ * In this format, each row is written on a single line
+ * and the values should separated by any blank character
+ * (tab, space, multiple spaces, ...). Empty lines are
+ * not allowed.
+ *
+ * ---- start ----
+ *  1  2  3
+ *  4  5  6
+ *  7  8  9
+ * ----- end -----
+ *
  */
 template<class T>
 class Matrix2D : public Matrix<T>
@@ -21,22 +35,24 @@ class Matrix2D : public Matrix<T>
         // constructors
         Matrix2D() = default ;
         /*!
-         * \brief Constructs a matrix with the given dimension with
-         * 0 values.
-         * \param dim the dimensions.
+         * \brief Constructs a matrix with the given dimensions,
+         * filled with 0 values.
+         * \param nrow the number of rows.
+         * \param ncol the number of columns.
          */
         Matrix2D(size_t nrow, size_t ncol) ;
         /*!
          * \brief Constructs a matrix with the given dimensions and
          * initialize the values to the given value.
-         * \param dim the dimensions.
+         * \param nrow the number of rows.
+         * \param ncol the number of columns.
          * \param value the value to initialize the matrix content
          * with.
          */
         Matrix2D(size_t nrow, size_t ncol, T value) ;
         /*!
          * \brief Copy constructor
-         * \param other
+         * \param other the matrix to copy the content from.
          */
         Matrix2D(const Matrix2D& other) ;
         /*!
@@ -118,7 +134,8 @@ class Matrix2D : public Matrix<T>
         void set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
 
         /*!
-         * \brief Nicely print the matrix on the given string.
+         * \brief Produces a nice representation of the matrix on the given
+         * stream.
          * \param stream the stream.
          * \param precision the rounding precision.
          * \param width the column width in number of characters.
@@ -150,7 +167,7 @@ class Matrix2D : public Matrix<T>
 } ;
 
 /*!
- * \brief Allows to write the content of a matrix to a stream.
+ * \brief Sends a representation of the matrix to the stream.
  * \param stream the stream of interest.
  * \param m the matrix of interest.
  * \return a reference to the stream.
@@ -230,41 +247,46 @@ Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error
         if(file.eof())
         {   break ; }
         if(buffer_str.size() == 0)
-        {   char msg[BUFFER_SIZE] ;
-            sprintf(msg, "error! while reading %s (empty line)", file_address.c_str()) ;
+        {   file.close() ;
+            char msg[BUFFER_SIZE] ;
+            sprintf(msg, "format error! while reading %s (empty line)", file_address.c_str()) ;
             throw std::runtime_error(msg) ;
         }
         if(file.fail())
-        {   char msg[BUFFER_SIZE] ;
+        {   file.close() ;
+            char msg[BUFFER_SIZE] ;
             sprintf(msg, "error! while reading %s", file_address.c_str()) ;
             throw std::runtime_error(msg) ;
         }
-        if(buffer_str.size() == 0)
-        {   continue ; }
-        else
-        {   // parse line
-            buffer_vec.clear() ;
-            std::istringstream buffer_ss(buffer_str) ;
 
-            while(buffer_ss >> buffer_T)
-            {   buffer_vec.push_back(buffer_T) ; }
-
-            // check that number of column is constant
-            if(i == 0)
-            {  row_len = buffer_vec.size() ; }
-            else if(buffer_vec.size() != row_len)
-            {   char msg[BUFFER_SIZE] ;
-                sprintf(msg, "error! variable number of columns in %s", file_address.c_str()) ;
-                throw std::runtime_error(msg) ;
-            }
-            // update matrix content
-            for(auto i : buffer_vec)
-            {   this->_data.push_back(i) ;
-                this->_data_size++ ;
-            }
-            this->_dim[1]++ ;
-            // this->_data.push_back(buffer_vec);
+        // parse line
+        buffer_vec.clear() ;
+        std::istringstream buffer_ss(buffer_str) ;
+        while(buffer_ss >> buffer_T)
+        {   buffer_vec.push_back(buffer_T) ; }
+        // check for an error which likely indicates that a value could not be
+        // casted into a type T (mixed data types in the file)
+        if(buffer_ss.fail() and not buffer_ss.eof())
+        {   file.close() ;
+            char msg[BUFFER_SIZE] ;
+            sprintf(msg, "format error! could not read a line in %s (incompatible data types)", file_address.c_str()) ;
+            throw std::runtime_error(msg) ;
         }
+        // check that number of column is constant
+        if(i == 0)
+        {  row_len = buffer_vec.size() ; }
+        else if(buffer_vec.size() != row_len)
+        {   file.close() ;
+            char msg[BUFFER_SIZE] ;
+            sprintf(msg, "format error! variable number of columns in %s", file_address.c_str()) ;
+            throw std::runtime_error(msg) ;
+        }
+        // update matrix content
+        for(auto i : buffer_vec)
+        {   this->_data.push_back(i) ;
+            this->_data_size++ ;
+        }
+        this->_dim[1]++ ;
         i++ ;
     }
     file.close() ;
@@ -287,7 +309,7 @@ T Matrix2D<T>::get(size_t row, size_t col) const throw(std::out_of_range)
 template<class T>
 void Matrix2D<T>::set(size_t row, size_t col, T value) throw(std::out_of_range)
 {   try
-    {   this->get({row, col}) ; }
+    {   this->set({row, col}, value) ; }
     catch(std::out_of_range& e)
     {   throw e ; }
 }

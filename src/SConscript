@@ -14,13 +14,10 @@ tests_src  = Glob("Unittests/*.cpp")
 
 # Source file containing main()
 main_tests_src  = Glob("unittests.cpp")
-# main_src        = Glob("main.cpp")
 
 # compilation instructions for every module
 tests_obj      = Object(tests_src,      CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
 main_tests_obj = Object(main_tests_src, CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
-# main_obj       = Object(main_src, CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
 
 # clustering program compilation
 Program("unittests", main_tests_obj + tests_obj, CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
-# Program("main",      main_obj,                   CCFLAGS=ccflags, CPPPATH=cpppath, LIBS=libs, LIBPATH=libs_path)
