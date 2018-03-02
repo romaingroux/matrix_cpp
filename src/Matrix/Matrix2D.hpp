@@ -27,6 +27,10 @@
  *  7  8  9
  * ----- end -----
  *
+ * Constructing a matrix from an empty file (0 bytes or only an EOL char) returns a null
+ * matrix (0x0 dimensions). Writting a null matrix (that is with at least one null
+ * dimension creates an empty file.
+ *
  */
 template<class T>
 class Matrix2D : public Matrix<T>
@@ -56,8 +60,12 @@ class Matrix2D : public Matrix<T>
          */
         Matrix2D(const Matrix2D& other) ;
         /*!
-         * \brief Constructs a matrix from a text file.
+         * \brief Constructs a matrix from a text file. A matrix contructed
+         * from an empty file (or a file containing only one EOL char) returns
+         * an empty matrix (null dimensions).
          * \param file_address the address of the file containing the matrix.
+         * \throw std::runtime_error if anything happen while reading the
+         * file (format error, file not found, etc).
          */
         Matrix2D(const std::string& file_address) throw (std::runtime_error) ;
 
@@ -240,25 +248,28 @@ Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error
     T                   buffer_T ;
 
     // read file
-    size_t i = 0 ;
+    size_t n_line = 0 ;
     size_t row_len = 0 ;
+
     while(getline(file, buffer_str))
     {   // check stream status and read content
-        if(file.eof())
-        {   break ; }
-        if(buffer_str.size() == 0)
-        {   file.close() ;
-            char msg[BUFFER_SIZE] ;
-            sprintf(msg, "format error! while reading %s (empty line)", file_address.c_str()) ;
-            throw std::runtime_error(msg) ;
-        }
         if(file.fail())
         {   file.close() ;
             char msg[BUFFER_SIZE] ;
             sprintf(msg, "error! while reading %s", file_address.c_str()) ;
             throw std::runtime_error(msg) ;
         }
+        if(buffer_str.size() == 0)
+        {   // this file only contains one eol char and should be considered as empty,
+            // -> returns empty matrix not an error
+            if(n_line == 0 and file.peek() == EOF and file.eof())
+            {  break ; }
 
+            file.close() ;
+            char msg[BUFFER_SIZE] ;
+            sprintf(msg, "format error! while reading %s (empty line)", file_address.c_str()) ;
+            throw std::runtime_error(msg) ;
+        }
         // parse line
         buffer_vec.clear() ;
         std::istringstream buffer_ss(buffer_str) ;
@@ -273,7 +284,7 @@ Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error
             throw std::runtime_error(msg) ;
         }
         // check that number of column is constant
-        if(i == 0)
+        if(n_line == 0)
         {  row_len = buffer_vec.size() ; }
         else if(buffer_vec.size() != row_len)
         {   file.close() ;
@@ -287,7 +298,7 @@ Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error
             this->_data_size++ ;
         }
         this->_dim[1]++ ;
-        i++ ;
+        n_line++ ;
     }
     file.close() ;
 
@@ -377,16 +388,15 @@ void Matrix2D<T>::set_col(size_t i, const std::vector<T>& values) throw (std::ou
 template<class T>
 void Matrix2D<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
 {   stream.setf(std::ios::left) ;
-    /*
-    for(auto& row : this->data)
-    {   for(auto cell : row)
-        {   stream << std::setprecision(precision) << std::setw(width) << cell << sep ; }
-        stream << std::endl ;
-    }*/
-    for(size_t i=0; i<this->get_data_size(); i++)
-    {   stream << std::setprecision(precision) << std::setw(width) << this->_data[i] << sep ;
-        if(( i!= 0) and (i % this->get_ncol() == 0))
-        {   stream << std::endl ;}
+
+    size_t    n  = 0 ;
+    size_t n_tot = this->get_nrow()*this->get_ncol() ;
+
+    for(size_t i=0; i<this->get_nrow(); i++)
+    {   for(size_t j=0; j<this->get_ncol(); j++, n++)
+        {   stream << std::setprecision(precision) << std::setw(width) << (*this)(i,j) << sep ; }
+        if(n<n_tot)
+        {   stream << std::endl ; }
     }
 }
 

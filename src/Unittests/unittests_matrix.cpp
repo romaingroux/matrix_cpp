@@ -5,6 +5,7 @@
 #include "Matrix/Matrix.hpp"
 #include "Matrix/Matrix2D.hpp"
 #include "Matrix/Matrix3D.hpp"
+#include "Matrix/Matrix4D.hpp"
 
 /*!
  * \brief Given a matrix and an offset, this methods converts
@@ -49,6 +50,8 @@ std::ostream& operator << (std::ostream& stream, const std::vector<T>& v)
     {   stream << i << ' ' ; }
     return stream ;
 }
+
+
 /*
 // Matrix test suite
 SUITE(Matrix)
@@ -398,6 +401,7 @@ SUITE(Matrix)
 
 */
 
+
 SUITE(Matrix2D)
 {   // displays message
     TEST(message)
@@ -699,6 +703,9 @@ SUITE(Matrix2D)
         std::string file_int4("./src/Unittests/data/matrix2d_int4.mat") ;
         std::string file_int5("./src/Unittests/data/matrix2d_int5.mat") ;
         std::string file_int6("./src/Unittests/data/matrix2d_int6.mat") ;
+        std::string file_int7("./src/Unittests/data/matrix2d_int7.mat") ;
+        std::string file_int8("./src/Unittests/data/matrix2d_int8.mat") ;
+        std::string file_int9("./src/Unittests/data/matrix2d_int9.mat") ;
 
         std::string file_char1("./src/Unittests/data/matrix2d_char1.mat") ;
         std::string file_double1("./src/Unittests/data/matrix2d_double1.mat") ;
@@ -718,8 +725,21 @@ SUITE(Matrix2D)
         // matrix of int
         Matrix2D<int> m_int1(file_int1) ; // this one is perfect
         Matrix2D<int> m_int2(file_int2) ; // this one has inhomogeneous spaceers but is OK
+
         CHECK_EQUAL(m_int, m_int1) ;
         CHECK_EQUAL(m_int, m_int2) ;
+
+        // matrix with only 1 int
+        Matrix2D<int> m_int3(file_int7) ;
+        CHECK_EQUAL( Matrix2D<int>(1,1,1), m_int3) ;
+
+        // empty matrix (empty file)
+        Matrix2D<int> m_int4(file_int8) ;
+        CHECK_EQUAL(Matrix2D<int>(0,0), m_int4) ;
+
+        // empty matrix (only eol in file)
+        Matrix2D<int> m_int5(file_int9) ;
+        CHECK_EQUAL(Matrix2D<int>(0,0), m_int5) ;
 
         // these files are not well formatted
         CHECK_THROW(m_int2 = Matrix2D<int>(file_int3), std::runtime_error) ; // data are inhomogeneous
@@ -738,13 +758,41 @@ SUITE(Matrix2D)
         // file does not exist
         CHECK_THROW(Matrix2D<int> m_int2(file_ghost), std::runtime_error) ;
     }
+
+    // tests file format, writting a matrix and reading it should return the
+    // same matrix, uses set() and the == operator
+    // loading an empty file is not allowed (has no meaning, the file is empty)
+    TEST(file_format)
+    {   for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   Matrix2D<int> m(i,j) ;
+                for(size_t a=0; a<m.get_data_size(); a++)
+                {   m.set(a, a) ; }
+                std::ofstream file("./src/Unittests/data/matrix2d_out.mat") ;
+                // write to file
+                file << m << std::endl ;
+                file.close() ;
+                // read from file
+                Matrix2D<int> m2("./src/Unittests/data/matrix2d_out.mat") ;
+                // any matrix with at least one zero dimension is a null
+                // matrix
+                if(i==0 or j==0)
+                {   CHECK_EQUAL(Matrix2D<int>(0,0), m2) ; }
+                else
+                {    CHECK_EQUAL(m, m2) ; }
+            }
+        }
+    }
 }
+
+
 
 
 SUITE(Matrix3D)
 {   // displays message
     TEST(message)
     {   std::cout << "Starting Matrix3D tests..." << std::endl ; }
+
 
     // tests constructor
     TEST(constructor)
@@ -761,69 +809,6 @@ SUITE(Matrix3D)
             }
         }
     }
-
-    TEST(constructor_file)
-    {   std::string file_int1("./src/Unittests/data/matrix3d_int1.mat") ;
-        std::string file_int2("./src/Unittests/data/matrix3d_int2.mat") ;
-        std::string file_int3("./src/Unittests/data/matrix3d_int3.mat") ;
-        std::string file_int4("./src/Unittests/data/matrix3d_int4.mat") ;
-        std::string file_int5("./src/Unittests/data/matrix3d_int5.mat") ;
-        std::string file_int6("./src/Unittests/data/matrix3d_int6.mat") ;
-        std::string file_int7("./src/Unittests/data/matrix3d_int7.mat") ;
-        std::string file_int8("./src/Unittests/data/matrix3d_int8.mat") ;
-        std::string file_int9("./src/Unittests/data/matrix3d_int9.mat") ;
-        std::string file_int10("./src/Unittests/data/matrix3d_int10.mat") ;
-        std::string file_int11("./src/Unittests/data/matrix3d_int11.mat") ;
-        std::string file_double("./src/Unittests/data/matrix3d_double.mat") ;
-        std::string file_ghost("./src/Unittests/data/foo.mat") ;
-
-
-        std::vector<int> v_int = {-1,0,2,0,
-                                   0,3,0,4,
-                                   0,0,0,0,
-                                   0,0,0,0,
-                                   0,5,-6,0,
-                                   0,7,0,0} ;
-
-        std::vector<double> v_dbl = {-1.,0., 2.,0.,
-                                      0.,3., 0.,4.,
-                                      0.,0., 0.,0.,
-                                      0.,0., 0.,0.,
-                                      0.,5.,-6.,0.,
-                                      0.,7., 0.,0.} ;
-
-        std::vector<size_t> dim = {2,4,3} ;
-
-        // matrix of int
-        Matrix3D<int> m_int(file_int1) ;
-        CHECK_EQUAL(dim.size(), m_int.get_dim_size()) ;
-        CHECK_ARRAY_EQUAL(dim, m_int.get_dim(), dim.size()) ;
-        CHECK_EQUAL(v_int.size(), m_int.get_data_size()) ;
-        CHECK_ARRAY_EQUAL(v_int, m_int.get_data(), v_int.size()) ;
-
-        // these files are not well formatted
-        CHECK_THROW(Matrix3D<int> m_int2(file_int2),  std::runtime_error) ; // mixed data types
-        CHECK_THROW(Matrix3D<int> m_int2(file_int3),  std::runtime_error) ; // slice of variable dim
-        CHECK_THROW(Matrix3D<int> m_int2(file_int4),  std::runtime_error) ; // slice of variable dim
-        CHECK_THROW(Matrix3D<int> m_int2(file_int5),  std::runtime_error) ; // slice of variable dim
-        CHECK_THROW(Matrix3D<int> m_int2(file_int6),  std::runtime_error) ;  // empty line
-        CHECK_THROW(Matrix3D<int> m_int2(file_int7),  std::runtime_error) ;  // empty line
-        CHECK_THROW(Matrix3D<int> m_int2(file_int8),  std::runtime_error) ;  // empty line
-        CHECK_THROW(Matrix3D<int> m_int2(file_int9),  std::runtime_error) ;  // empty line
-        CHECK_THROW(Matrix3D<int> m_int2(file_int10), std::runtime_error) ;  // empty line
-        CHECK_THROW(Matrix3D<int> m_int2(file_int11), std::runtime_error) ;  // empty line
-
-        // this file does not exist
-        CHECK_THROW(Matrix3D<int> m_int2(file_ghost), std::runtime_error) ;
-
-        // matrix of double
-        Matrix3D<double> m_double(file_double) ;
-        CHECK_EQUAL(dim.size(), m_double.get_dim_size()) ;
-        CHECK_ARRAY_EQUAL(dim, m_double.get_dim(), dim.size()) ;
-        CHECK_EQUAL(v_int.size(), m_double.get_data_size()) ;
-        CHECK_ARRAY_EQUAL(v_int, m_double.get_data(), v_int.size()) ;
-    }
-
 
     // test constructor value
     TEST(constructor_value)
@@ -857,6 +842,87 @@ SUITE(Matrix3D)
                 }
             }
         }
+    }
+
+    // tests contructor from file, uses the == operator
+    TEST(constructor_file)
+    {   std::string file_int1("./src/Unittests/data/matrix3d_int1.mat") ;
+        std::string file_int2("./src/Unittests/data/matrix3d_int2.mat") ;
+        std::string file_int3("./src/Unittests/data/matrix3d_int3.mat") ;
+        std::string file_int4("./src/Unittests/data/matrix3d_int4.mat") ;
+        std::string file_int5("./src/Unittests/data/matrix3d_int5.mat") ;
+        std::string file_int6("./src/Unittests/data/matrix3d_int6.mat") ;
+        std::string file_int7("./src/Unittests/data/matrix3d_int7.mat") ;
+        std::string file_int8("./src/Unittests/data/matrix3d_int8.mat") ;
+        std::string file_int9("./src/Unittests/data/matrix3d_int9.mat") ;
+        std::string file_int10("./src/Unittests/data/matrix3d_int10.mat") ;
+        std::string file_int11("./src/Unittests/data/matrix3d_int11.mat") ;
+        std::string file_int12("./src/Unittests/data/matrix3d_int12.mat") ;
+        std::string file_int13("./src/Unittests/data/matrix3d_int13.mat") ;
+        std::string file_int14("./src/Unittests/data/matrix3d_int14.mat") ;
+        std::string file_double("./src/Unittests/data/matrix3d_double.mat") ;
+        std::string file_ghost("./src/Unittests/data/foo.mat") ;
+
+
+        std::vector<int> v_int = {-1,0,2,0,
+                                   0,3,0,4,
+                                   0,0,0,0,
+                                   0,0,0,0,
+                                   0,5,-6,0,
+                                   0,7,0,0} ;
+
+        std::vector<int> v_int2 = {1} ;
+
+        std::vector<double> v_dbl = {-1.,0., 2.,0.,
+                                      0.,3., 0.,4.,
+                                      0.,0., 0.,0.,
+                                      0.,0., 0.,0.,
+                                      0.,5.,-6.,0.,
+                                      0.,7., 0.,0.} ;
+
+        std::vector<size_t> dim = {2,4,3} ;
+        std::vector<size_t> dim2 = {1,1,1} ;
+
+        // matrix of int
+        Matrix3D<int> m_int(file_int1) ;
+        CHECK_EQUAL(dim.size(), m_int.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m_int.get_dim(), dim.size()) ;
+        CHECK_EQUAL(v_int.size(), m_int.get_data_size()) ;
+        CHECK_ARRAY_EQUAL(v_int, m_int.get_data(), v_int.size()) ;
+
+        // matrix with only 1 int
+        Matrix3D<int> m_int2(file_int12) ;
+        CHECK_EQUAL(Matrix3D<int>(1,1,1,1), m_int2) ;
+
+        // empty matrix (empty file)
+        Matrix3D<int> m_int3(file_int13) ;
+        CHECK_EQUAL(Matrix3D<int>(0,0,0), m_int3) ;
+
+        // empty matrix (only eol in file)
+        Matrix3D<int> m_int4(file_int13) ;
+        CHECK_EQUAL(Matrix3D<int>(0,0,0), m_int4) ;
+
+        // these files are not well formatted
+        CHECK_THROW(Matrix3D<int> m_int3(file_int2),  std::runtime_error) ; // mixed data types
+        CHECK_THROW(Matrix3D<int> m_int3(file_int3),  std::runtime_error) ; // slice of variable dim
+        CHECK_THROW(Matrix3D<int> m_int3(file_int4),  std::runtime_error) ; // slice of variable dim
+        CHECK_THROW(Matrix3D<int> m_int3(file_int5),  std::runtime_error) ; // slice of variable dim
+        CHECK_THROW(Matrix3D<int> m_int3(file_int6),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int3(file_int7),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int3(file_int8),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int3(file_int9),  std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int3(file_int10), std::runtime_error) ;  // empty line
+        CHECK_THROW(Matrix3D<int> m_int3(file_int11), std::runtime_error) ;  // empty line
+
+        // this file does not exist
+        CHECK_THROW(Matrix3D<int> m_int3(file_ghost), std::runtime_error) ;
+
+        // matrix of double
+        Matrix3D<double> m_double(file_double) ;
+        CHECK_EQUAL(dim.size(), m_double.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m_double.get_dim(), dim.size()) ;
+        CHECK_EQUAL(v_int.size(), m_double.get_data_size()) ;
+        CHECK_ARRAY_EQUAL(v_int, m_double.get_data(), v_int.size()) ;
     }
 
     // tests get()
@@ -895,7 +961,8 @@ SUITE(Matrix3D)
         }
     }
 
-    TEST(paenthesis_operator)
+    // tests the parenthesis operator
+    TEST(parenthesis_operator)
     {   int n = 999 ;
         for(size_t i=0; i<10; i++)
         {   for(size_t j=0; j<10; j++)
@@ -908,6 +975,277 @@ SUITE(Matrix3D)
                     }
                     for(size_t l=0; l<m.get_data_size(); l++)
                     {   CHECK_EQUAL(l, m.get(l)) ; }
+                }
+            }
+        }
+    }
+
+    // tests file format, writting a matrix and reading it should return the
+    // same matrix, uses set() and the == operator
+    TEST(file_format)
+    {   for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   Matrix3D<int> m(i,j,k) ;
+                    for(size_t a=0; a<m.get_data_size(); a++)
+                    {   m.set(a, a) ; }
+                    std::ofstream file("./src/Unittests/data/matrix3d_out.mat") ;
+                    // write to file
+                    file << m << std::endl ;
+                    file.close() ;
+                    // read from file
+                    Matrix3D<int> m2("./src/Unittests/data/matrix3d_out.mat") ;
+                    // any matrix with at least one zero dimension is a null
+                    // matrix
+                    if(i==0 or j==0 or k==0)
+                    {   CHECK_EQUAL(Matrix3D<int>(0,0,0), m2) ; }
+                    else
+                    {    CHECK_EQUAL(m, m2) ; }
+                }
+            }
+        }
+    }
+}
+
+
+SUITE(Matrix4D)
+{
+    // displays message
+    TEST(message)
+    {   std::cout << "Starting Matrix4D tests..." << std::endl ; }
+
+    // constructor
+    TEST(constructor)
+    {   for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   for(size_t l=0; l<10; l++)
+                    {   std::vector<size_t> dim = {i,j,k,l} ;
+                        Matrix4D<int> m(i,j,k,l) ;
+                        CHECK_EQUAL(dim.size(), m.get_dim_size()) ;
+                        CHECK_ARRAY_EQUAL(dim, m.get_dim(), dim.size()) ;
+                        CHECK_EQUAL(std::accumulate(begin(dim), end(dim), 1, std::multiplies<int>()),
+                                    m.get_data_size()) ;
+                    }
+                }
+            }
+        }
+    }
+
+    // test constructor value
+    TEST(constructor_value)
+    {   int  n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   for(size_t l=0; l<10; l++)
+                    {   std::vector<size_t> dim = {i,j,k,l} ;
+                        Matrix4D<int> m(i,j,k,l,n) ;
+                        CHECK_EQUAL(dim.size(), m.get_dim_size()) ;
+                        CHECK_ARRAY_EQUAL(dim, m.get_dim(), dim.size()) ;
+                        CHECK_EQUAL(std::accumulate(begin(dim), end(dim), 1, std::multiplies<int>()),
+                                    m.get_data_size()) ;
+                        for(const auto& i : m.get_data())
+                        {   CHECK_EQUAL(n, i) ; }
+                    }
+                }
+            }
+        }
+    }
+
+    // tests copy constructor
+    TEST(constructor_copy)
+    {   int  n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   for(size_t l=0; l<10; l++)
+                    {   std::vector<size_t> dim = {i,j,k,l} ;
+                        Matrix4D<int> m(i,j,k,l,n) ;
+                        Matrix4D<int> m2(m) ;
+                        CHECK_EQUAL(m, m2) ;
+                    }
+                }
+            }
+        }
+    }
+
+    // tests contructor from file, uses the == operator
+    TEST(constructor_file)
+    {
+        std::string file_int1("./src/Unittests/data/matrix4d_int1.mat") ;
+        std::string file_int2("./src/Unittests/data/matrix4d_int2.mat") ;
+        std::string file_int3("./src/Unittests/data/matrix4d_int3.mat") ;
+        std::string file_int4("./src/Unittests/data/matrix4d_int4.mat") ;
+        std::string file_int5("./src/Unittests/data/matrix4d_int5.mat") ;
+        std::string file_int6("./src/Unittests/data/matrix4d_int6.mat") ;
+        std::string file_int7("./src/Unittests/data/matrix4d_int7.mat") ;
+        std::string file_int8("./src/Unittests/data/matrix4d_int8.mat") ;
+        std::string file_int9("./src/Unittests/data/matrix4d_int9.mat") ;
+        std::string file_int10("./src/Unittests/data/matrix4d_int10.mat") ;
+        std::string file_int11("./src/Unittests/data/matrix4d_int11.mat") ;
+        std::string file_int12("./src/Unittests/data/matrix4d_int12.mat") ;
+        std::string file_int13("./src/Unittests/data/matrix4d_int13.mat") ;
+        std::string file_int14("./src/Unittests/data/matrix4d_int14.mat") ;
+        std::string file_int15("./src/Unittests/data/matrix4d_int15.mat") ;
+        std::string file_int16("./src/Unittests/data/matrix4d_int16.mat") ;
+        std::string file_int17("./src/Unittests/data/matrix4d_int17.mat") ;
+        std::string file_int18("./src/Unittests/data/matrix4d_int18.mat") ;
+        std::string file_int19("./src/Unittests/data/matrix4d_int19.mat") ;
+        std::string file_int20("./src/Unittests/data/matrix4d_int20.mat") ;
+        std::string file_dbl1("./src/Unittests/data/matrix4d_double1.mat") ;
+        std::string file_ghost("./src/Unittests/data/foo.mat") ;
+
+
+        std::vector<int> v_int = { 1, 2, 3,
+                                   4, 5, 6,
+                                   7, 8, 9,
+                                  10,11,12,
+                                  13,14,15,
+                                  16,17,18,
+                                  19,20,21,
+                                  22,23,24,
+                                   1, 2, 3,
+                                   4, 5, 6,
+                                   7, 8, 9,
+                                  10,11,12,
+                                  13,14,15,
+                                  16,17,18,
+                                  19,20,21,
+                                  22,23,24} ;
+
+        std::vector<double> v_dbl = { 1, 2, 3,
+                                      4, 5, 6,
+                                      7, 8, 9,
+                                      10,11,12,
+                                      13,14,15,
+                                      16,17,18,
+                                      19,20,21,
+                                      22,23,24,
+                                       1, 2, 3,
+                                       4, 5, 6,
+                                       7, 8, 9,
+                                      10,11,12,
+                                      13,14,15,
+                                      16,17,18,
+                                      19,20,21,
+                                      22,23,24} ;
+
+        std::vector<size_t> dim = {2,3,2,4} ;
+
+        // matrix of int
+        Matrix4D<int> m_int(file_int1) ;
+        CHECK_EQUAL(dim.size(), m_int.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m_int.get_dim(), dim.size()) ;
+        CHECK_EQUAL(v_int.size(), m_int.get_data_size()) ;
+        CHECK_ARRAY_EQUAL(v_int, m_int.get_data(), v_int.size()) ;
+
+        // matrix with only 1 int
+        Matrix4D<int> m_int2(file_int18) ;
+        CHECK_EQUAL(Matrix4D<int>(1,1,1,1,1), m_int2) ;
+
+        // empty matrix (empty file)
+        Matrix4D<int> m_int3(file_int19) ;
+        CHECK_EQUAL(Matrix4D<int>(0,0,0,0), m_int3) ;
+
+        // empty matrix (only eol in file)
+        Matrix4D<int> m_int4(file_int20) ;
+        CHECK_EQUAL(Matrix4D<int>(0,0,0,0), m_int3) ;
+
+
+        // these files are not well formatted
+        CHECK_THROW(Matrix4D<int> m_int5(file_int2), std::runtime_error) ;  // empty lines
+        CHECK_THROW(Matrix4D<int> m_int5(file_int3), std::runtime_error) ;  // empty lines
+        CHECK_THROW(Matrix4D<int> m_int5(file_int4), std::runtime_error) ;  // empty lines
+        CHECK_THROW(Matrix4D<int> m_int5(file_int5), std::runtime_error) ;  // empty lines
+        CHECK_THROW(Matrix4D<int> m_int5(file_int6), std::runtime_error) ;  // empty lines
+        CHECK_THROW(Matrix4D<int> m_int5(file_int7), std::runtime_error) ;  // first line problem
+        CHECK_THROW(Matrix4D<int> m_int5(file_int8), std::runtime_error) ;  // first line problem
+        CHECK_THROW(Matrix4D<int> m_int5(file_int9), std::runtime_error) ;  // first line problem
+        CHECK_THROW(Matrix4D<int> m_int5(file_int10), std::runtime_error) ; // second line problem
+        CHECK_THROW(Matrix4D<int> m_int5(file_int11), std::runtime_error) ; // extra column
+        CHECK_THROW(Matrix4D<int> m_int5(file_int12), std::runtime_error) ; // missing column
+        CHECK_THROW(Matrix4D<int> m_int5(file_int13), std::runtime_error) ; // extra row
+        CHECK_THROW(Matrix4D<int> m_int5(file_int14), std::runtime_error) ; // extra 2d slice
+        CHECK_THROW(Matrix4D<int> m_int5(file_int15), std::runtime_error) ; // extra 2d slice
+        CHECK_THROW(Matrix4D<int> m_int5(file_int16), std::runtime_error) ; // last line problem
+        CHECK_THROW(Matrix4D<int> m_int5(file_int17), std::runtime_error) ; // mixded data types
+
+        // this file does not exist
+        CHECK_THROW(Matrix4D<int> m_int3(file_ghost), std::runtime_error) ;
+
+        // matrix of double
+        Matrix4D<double> m_dbl(file_dbl1) ;
+        CHECK_EQUAL(dim.size(), m_dbl.get_dim_size()) ;
+        CHECK_ARRAY_EQUAL(dim, m_dbl.get_dim(), dim.size()) ;
+        CHECK_EQUAL(v_dbl.size(), m_dbl.get_data_size()) ;
+        CHECK_ARRAY_EQUAL(v_dbl, m_dbl.get_data(), v_dbl.size()) ;
+    }
+
+    // tests get()
+    TEST(get)
+    {   int n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   for(size_t l=0; l<10; l++)
+                    {   std::vector<size_t> dim = {i,j,k,l} ;
+                        Matrix4D<int> m(i,j,k,l,n) ;
+                        for(size_t a=0; a<m.get_data_size(); a++)
+                        {   std::vector<size_t> coord = convert_to_coord(m, a) ;
+                            CHECK_EQUAL(m.get(a), m.get(coord[0], coord[1], coord[2], coord[3])) ;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // tests set()
+    TEST(set)
+    {   int n = 999 ;
+        for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   for(size_t l=0; l<10; l++)
+                    {   std::vector<size_t> dim = {i,j,k,l} ;
+                        Matrix4D<int> m(i,j,k,n) ;
+                        for(size_t a=0; a<m.get_data_size(); a++)
+                        {   std::vector<size_t> coord = convert_to_coord(m, a) ;
+                            m.set(coord[0], coord[1], coord[2], coord[3], a) ;
+                        }
+                        for(size_t a=0; a<m.get_data_size(); a++)
+                        {   CHECK_EQUAL(a, m.get(a)) ; }
+                    }
+                }
+            }
+        }
+    }
+
+    // tests file format, writting a matrix and reading it should return the
+    // same matrix, uses set() and the == operator
+    TEST(file_format)
+    {   for(size_t i=0; i<10; i++)
+        {   for(size_t j=0; j<10; j++)
+            {   for(size_t k=0; k<10; k++)
+                {   for(size_t l=0; l<10; l++)
+                    {   std::vector<size_t> dim = {i,j,k,l} ;
+                        Matrix4D<int> m(i,j,k,l) ;
+                        for(size_t a=0; a<m.get_data_size(); a++)
+                        {   m.set(a, a) ; }
+                        std::ofstream file("./src/Unittests/data/matrix4d_out.mat") ;
+                        // write to file
+                        file << m << std::endl ;
+                        file.close() ;
+                        // read from file
+                        Matrix4D<int> m2("./src/Unittests/data/matrix4d_out.mat") ;
+                        // any matrix with at least one zero dimension is a null
+                        // matrix
+                        if(i==0 or j==0 or k==0 or l==0)
+                        {   CHECK_EQUAL(Matrix4D<int>(0,0,0,0), m2) ; }
+                        else
+                        {    CHECK_EQUAL(m, m2) ; }
+                    }
                 }
             }
         }

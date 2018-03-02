@@ -16,7 +16,7 @@
 
 /*!
  * The Matrix3D class is a specialisation of the Matrix
- * class to make work with 3D matrices easier.
+ * class to make work with 3D matrices more easily.
  *
  * A text file format is defined to store such matrices. The specifications are as
  * follows :
@@ -25,7 +25,7 @@
  *
  * 1st line       : a slice header, ',,0' indicates that a slice of the 3rd dimension
  *                  is beginning (this is a z slice).
- * 2nd - Nth line : the firt slice, as a 2d matrix. here is has dimensions 4x5.
+ * 2nd - Nth line : the firt slice, as a 2d matrix (the exemple below has dimensions 3x4).
  * N+1th line     : a slice header, ',,1' indicates that the 2nd slice is beginning.
  * N+1th - ...    : the second slice
  * and so on...
@@ -41,6 +41,10 @@
  * 16 17 18 19
  * 20 21 22 23
  * ----- end -----
+ *
+ * Constructing a matrix from an empty file (0 bytes or only an EOL char) returns a null
+ * matrix (0x0x0 dimensions). Writting a null matrix (that is with at least one null
+ * dimension creates an empty file.
  *
  */
 template<class T>
@@ -73,8 +77,12 @@ class Matrix3D : public Matrix<T>
          */
         Matrix3D(const Matrix3D& other) ;
         /*!
-         * \brief Constructs a matrix from a text file.
+         * \brief Constructs a matrix from a text file. A matrix contructed
+         * from an empty file (or a file containing only one EOL char) returns
+         * an empty matrix (null dimensions).
          * \param file_address the address of the file containing the matrix.
+         * \throw std::runtime_error if anything happen while reading the
+         * file (format error, file not found, etc).
          */
         Matrix3D(const std::string& file_address) throw (std::runtime_error) ;
 
@@ -138,6 +146,7 @@ class Matrix3D : public Matrix<T>
         const T& operator() (size_t dim1, size_t dim2, size_t dim3) const ;
 
     private:
+        // methods
         /*!
          * \brief Checks whether a given string is a slice header
          * (such as ",,0"), as found in files storing Matrix3D.
@@ -198,36 +207,43 @@ Matrix3D<T>::Matrix3D(const std::string &file_address) throw (std::runtime_error
 
     // read file
     size_t n_line      = 0, n_line_data = 0 ; // number of line and of data line read
-    size_t row_len     = 0, col_len = 0 ;     // length of row and column in nber of values
+    size_t row_len     = 0, col_len     = 0 ; // length of row and column in nber of values
     size_t row_len_cur = 0, col_len_cur = 0 ; // current number of values read in row and col
 
     while(getline(file, buffer_str))
-    {   // check stream status and read content
-        if(buffer_str.size() == 0)
-        {   file.close() ;
-            char msg[BUFFER_SIZE] ;
-            sprintf(msg, "error! while reading %s (empty line)", file_address.c_str()) ;
-            throw std::runtime_error(msg) ;
-        }
-        if(file.fail())
+    {   if(file.fail())
         {   file.close() ;
             char msg[BUFFER_SIZE] ;
             sprintf(msg, "error! while reading %s", file_address.c_str()) ;
             throw std::runtime_error(msg) ;
         }
+        // check empty line
+        if(buffer_str.size() == 0)
+        {   // this file only contains one eol char and should be considered as empty,
+            // -> returns empty matrix not an error
+            if(n_line == 0 and file.peek() == EOF and file.eof())
+            {  break ; }
+
+            file.close() ;
+            char msg[BUFFER_SIZE] ;
+            sprintf(msg, "format error! while reading %s (empty line)", file_address.c_str()) ;
+            throw std::runtime_error(msg) ;
+        }
+
+
         // check whether it is the beginning of a slice
-        // 1st line in file should be
+        // 1st line in file should be one like this
         if(this->is_header(buffer_str))
         {   // check that slice have a constant number of rows
             if(this->_dim[2] == 1)
             {   col_len = col_len_cur ;
-                this->_dim[0] = row_len ;
-                this->_dim[1]  = col_len ;
+                // this->_dim[0] = row_len ;
+                // this->_dim[1]  = col_len ;
             }
             else if(col_len_cur != col_len)
             {   file.close() ;
                 char msg[BUFFER_SIZE] ;
-                sprintf(msg, "format error! slice have variable dimensions in %s", file_address.c_str()) ;
+                sprintf(msg, "format error! slice have variable dimensions 1 in %s", file_address.c_str()) ;
                 throw std::runtime_error(msg) ;
             }
             this->_dim[2]++ ;
@@ -267,7 +283,7 @@ Matrix3D<T>::Matrix3D(const std::string &file_address) throw (std::runtime_error
         else if(row_len_cur != row_len)
         {   file.close() ;
             char msg[BUFFER_SIZE] ;
-            sprintf(msg, "format error! slice have variable dimensions in %s", file_address.c_str()) ;
+            sprintf(msg, "format error! slice have variable dimensions 2 in %s", file_address.c_str()) ;
             throw std::runtime_error(msg) ;
         }
 
@@ -279,9 +295,12 @@ Matrix3D<T>::Matrix3D(const std::string &file_address) throw (std::runtime_error
         col_len_cur++ ;
         n_line_data++ ;
         n_line++ ;
+        // update matrix dimensions
+        this->_dim[0] = row_len_cur ;
+        this->_dim[1] = col_len_cur ;
     }
     // check dimensions of last slice
-    if(col_len_cur != col_len)
+    if(col_len_cur != this->_dim[1])
     {   file.close() ;
         char msg[BUFFER_SIZE] ;
         sprintf(msg, "format error! slice have variable dimensions in %s", file_address.c_str()) ;
@@ -319,15 +338,23 @@ T& Matrix3D<T>::operator () (size_t dim1, size_t dim2, size_t dim3)
 
 template<class T>
 void Matrix3D<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
-{
+{   // if the matrix has at least one 0 dimension (no data), don't do anything
+    if(this->_dim[0]==0 or this->_dim[1]==0 or this->_dim[2]==0)
+    {   return ; }
+
     stream.setf(std::ios::left) ;
     std::vector<size_t> dim = this->get_dim() ;
+
+    size_t    n  = 0 ;
+    size_t n_tot = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<int>()) ;
+
     for(size_t z=0; z<dim[2]; z++)
-    {   stream << z << ",," << std::endl ;
+    {   stream << ",," << z << std::endl ;
         for(size_t x=0; x<dim[0]; x++)
-        {   for(size_t y=0; y<dim[1]; y++)
+        {   for(size_t y=0; y<dim[1]; y++, n++)
             {   stream << std::setprecision(precision) << std::setw(width) << (*this)(x,y,z) << sep ; }
-            stream << std::endl ;
+            if(n<n_tot)
+            {   stream << std::endl ; }
         }
     }
 }
@@ -342,9 +369,11 @@ const T& Matrix3D<T>::operator () (size_t dim1, size_t dim2, size_t dim3) const
 
 template<class T>
 bool Matrix3D<T>::is_header(const std::string& str) const
-{   if(str.find(',', 0) != std::string::npos)
-    {   return true ; }
-    return false ;
+{   if(str[0] == ',' and
+            str[1] == ',' and
+            str.find(',', 2) == std::string::npos)
+   {   return true ; }
+   return false ;
 }
 
 #endif // MATRIX3D_HPP
