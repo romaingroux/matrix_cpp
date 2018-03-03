@@ -5,6 +5,7 @@
 #include <vector>
 #include <numeric> // accumulate()
 #include <iostream>
+#include <iomanip>   // setw(), setprecision()
 #include <stdexcept> // out_of_range
 
 
@@ -157,6 +158,17 @@ class Matrix
          */
         size_t get_data_size() const ;
 
+		
+        /*!
+         * \brief Produces a nice representation of the matrix on the given
+         * stream.
+         * \param stream the stream.
+         * \param precision the rounding precision.
+         * \param width the column width in number of characters.
+         * \param sep the character separator.
+         */
+		virtual void print(std::ostream& stram, size_t precision=4, size_t width=6, char sep=' ') const ;
+
         // operator
         /*!
          * \brief Assignment operator.
@@ -305,8 +317,7 @@ class Matrix
  */
 template<class T>
 std::ostream& operator << (std::ostream& stream, const Matrix<T>& m)
-{   for(size_t i=0; i<m.get_data_size(); i++)
-    {   stream << m.get(i) << ' ' ; }
+{	m.print(stream) ;   
     return stream ;
 }
 
@@ -380,6 +391,12 @@ template<class T>
 size_t Matrix<T>::get_data_size() const
 {   return this->_data_size ; }
 
+template<class T>
+void Matrix<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
+{	stream.setf(std::ios::left) ;	
+	for(size_t i=0; i<this->get_data_size(); i++)
+    {   stream << std::setprecision(precision) << std::setw(width) << this->get(i) << sep ; }
+}
 
 template<class T>
 Matrix<T>& Matrix<T>::operator = (const Matrix& other)

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <functional>
 
 #include "Matrix/Matrix2D.hpp"
 #include "Matrix/Matrix3D.hpp"
@@ -15,10 +16,11 @@ std::ostream& operator << (std::ostream& stream, const std::vector<T>& v)
 }
 
 int main()
-{	Matrix2D<int> m(1,1) ;
+{	Matrix<int>* m = new Matrix2D<int>(2,3) ;
+	for(size_t i=0; i<m->get_data_size(); i++)
+	{	m->set(i,i) ; }
     std::cout << "--------------------" << std::endl ;
-    std::cout << m << std::endl ;
+    std::cout << *m << std::endl ;
 	std::cout << "--------------------" << std::endl ;
-
 	return 0 ;
 }

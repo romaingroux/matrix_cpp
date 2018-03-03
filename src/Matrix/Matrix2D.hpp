@@ -149,7 +149,7 @@ class Matrix2D : public Matrix<T>
          * \param width the column width in number of characters.
          * \param sep the character separator.
          */
-        void print(std::ostream& stram, size_t precision=4, size_t width=6, char sep=' ') const ;
+        virtual void print(std::ostream& stram, size_t precision=4, size_t width=6, char sep=' ') const override ;
 
         // operators
         /*!
