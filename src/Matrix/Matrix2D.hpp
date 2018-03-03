@@ -5,10 +5,11 @@
 
 #include <vector>
 #include <string>
-#include <fstream>
+#include <fstream>  // ifstream
 #include <iostream>
-#include <iomanip>
-#include <sstream>
+#include <iomanip>  // setw(), setprecision(), fixed
+#include <sstream>  // istringstream
+#include <stdexcept> // runtime_error, out_of_range
 
 #define BUFFER_SIZE 4096
 
@@ -68,6 +69,11 @@ class Matrix2D : public Matrix<T>
          * file (format error, file not found, etc).
          */
         Matrix2D(const std::string& file_address) throw (std::runtime_error) ;
+
+        /*!
+         * \brief Destructor.
+         */
+        virtual ~Matrix2D() = default ;
 
         // methods overloaded in Matrix
         using Matrix<T>::get ;
@@ -149,7 +155,7 @@ class Matrix2D : public Matrix<T>
          * \param width the column width in number of characters.
          * \param sep the character separator.
          */
-        virtual void print(std::ostream& stram, size_t precision=4, size_t width=6, char sep=' ') const override ;
+        virtual void print(std::ostream& stram, size_t precision=4, size_t width=8, char sep=' ') const override ;
 
         // operators
         /*!
@@ -388,13 +394,14 @@ void Matrix2D<T>::set_col(size_t i, const std::vector<T>& values) throw (std::ou
 template<class T>
 void Matrix2D<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
 {   stream.setf(std::ios::left) ;
+    stream << std::setprecision(precision) << std::fixed ;
 
     size_t    n  = 0 ;
     size_t n_tot = this->get_nrow()*this->get_ncol() ;
 
     for(size_t i=0; i<this->get_nrow(); i++)
     {   for(size_t j=0; j<this->get_ncol(); j++, n++)
-        {   stream << std::setprecision(precision) << std::setw(width) << (*this)(i,j) << sep ; }
+        {   stream << std::setw(width) << (*this)(i,j) << sep ; }
         if(n<n_tot)
         {   stream << std::endl ; }
     }

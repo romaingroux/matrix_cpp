@@ -5,7 +5,7 @@
 #include <vector>
 #include <numeric> // accumulate()
 #include <iostream>
-#include <iomanip>   // setw(), setprecision()
+#include <iomanip>   // setw(), setprecision(), fixed
 #include <stdexcept> // out_of_range
 
 
@@ -93,6 +93,11 @@ class Matrix
          */
         Matrix (const Matrix& other) ;
 
+        /*!
+         * \brief Destructor.
+         */
+        virtual ~Matrix() = default ;
+
         // methods
         /*!
          * \brief Gets the element at the given offset.
@@ -167,7 +172,7 @@ class Matrix
          * \param width the column width in number of characters.
          * \param sep the character separator.
          */
-		virtual void print(std::ostream& stram, size_t precision=4, size_t width=6, char sep=' ') const ;
+        virtual void print(std::ostream& stram, size_t precision=4, size_t width=8, char sep=' ') const ;
 
         // operator
         /*!
@@ -393,9 +398,10 @@ size_t Matrix<T>::get_data_size() const
 
 template<class T>
 void Matrix<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
-{	stream.setf(std::ios::left) ;	
+{	stream.setf(std::ios::left) ;
+    stream << std::setprecision(precision) << std::fixed ;
 	for(size_t i=0; i<this->get_data_size(); i++)
-    {   stream << std::setprecision(precision) << std::setw(width) << this->get(i) << sep ; }
+    {   stream << std::setw(width) << this->get(i) << sep ; }
 }
 
 template<class T>

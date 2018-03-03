@@ -6,11 +6,11 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <iomanip>
+#include <iomanip>      // setw(), setprecision(), fixed
 #include <fstream>      // ifstream
 #include <sstream>      // istringstream
-#include <stdexcept>    // std::runtime_error
-#include <algorithm>    // std::equal()
+#include <stdexcept>    // runtime_error, out_of_range
+#include <algorithm>    // equal()
 
 #define BUFFER_SIZE 4096
 
@@ -86,6 +86,11 @@ class Matrix3D : public Matrix<T>
          */
         Matrix3D(const std::string& file_address) throw (std::runtime_error) ;
 
+        /*!
+         * \brief Destructor.
+         */
+        virtual ~Matrix3D() = default ;
+
         // methods overloaded from Matrix
         using Matrix<T>::get ;
         using Matrix<T>::set ;
@@ -121,7 +126,7 @@ class Matrix3D : public Matrix<T>
          * \param width the column width in number of characters.
          * \param sep the character separator.
          */
-        virtual void print(std::ostream& stream, size_t precision=4 ,size_t width=6, char sep=' ') const override ;
+        virtual void print(std::ostream& stream, size_t precision=4 ,size_t width=8, char sep=' ') const override ;
 
         // operators
         /*!
@@ -343,6 +348,7 @@ void Matrix3D<T>::print(std::ostream& stream, size_t precision, size_t width, ch
     {   return ; }
 
     stream.setf(std::ios::left) ;
+    stream << std::setprecision(precision) << std::fixed ;
     std::vector<size_t> dim = this->get_dim() ;
 
     size_t    n  = 0 ;
@@ -352,7 +358,7 @@ void Matrix3D<T>::print(std::ostream& stream, size_t precision, size_t width, ch
     {   stream << ",," << z << std::endl ;
         for(size_t x=0; x<dim[0]; x++)
         {   for(size_t y=0; y<dim[1]; y++, n++)
-            {   stream << std::setprecision(precision) << std::setw(width) << (*this)(x,y,z) << sep ; }
+            {   stream << std::setw(width) << (*this)(x,y,z) << sep ; }
             if(n<n_tot)
             {   stream << std::endl ; }
         }

@@ -5,9 +5,9 @@
 
 #include <string>
 #include <vector>
-#include <stdexcept> // std::out_of_range
+#include <stdexcept> // runtime_error, out_of_range
 #include <iostream>
-#include <iomanip>
+#include <iomanip>  // setw(), setprecision(), fixed
 #include <fstream>  // ifstream
 #include <sstream>  // sstream
 
@@ -95,6 +95,11 @@ class Matrix4D : public Matrix<T>
          */
         Matrix4D(const std::string& file_address) throw (std::runtime_error) ;
 
+        /*!
+         * \brief Destructor.
+         */
+        virtual ~Matrix4D() = default ;
+
         // methods overloaded from Matrix
         using Matrix<T>::get ;
         using Matrix<T>::set ;
@@ -131,7 +136,7 @@ class Matrix4D : public Matrix<T>
          * \param width the column width in number of characters.
          * \param sep the character separator.
          */
-        virtual void print(std::ostream& stream, size_t precision=4 ,size_t width=6, char sep=' ') const override ;
+        virtual void print(std::ostream& stream, size_t precision=4 ,size_t width=8, char sep=' ') const override ;
 
         // operators OK
         /*!
@@ -359,6 +364,7 @@ void Matrix4D<T>::print(std::ostream &stream, size_t precision, size_t width, ch
     {   return ; }
 
     stream.setf(std::ios::left) ;
+    stream << std::setprecision(precision) << std::fixed ;
     std::vector<size_t> dim = this->get_dim() ;
 
     size_t    n  = 0 ;
@@ -370,7 +376,7 @@ void Matrix4D<T>::print(std::ostream &stream, size_t precision, size_t width, ch
         {   stream << ",," << dim3 << std::endl ;
             for(size_t dim2=0; dim2<dim[0]; dim2++)
             {   for(size_t dim1=0; dim1<dim[1]; dim1++, n++)
-                {   stream << std::setprecision(precision) << std::setw(width) << (*this)(dim2,dim1,dim3,dim4) << sep ; }
+                {   stream << std::setw(width) << (*this)(dim2,dim1,dim3,dim4) << sep ; }
                 // avoids terminal eol
                 if(n < n_tot)
                 {   stream << std::endl ; }
