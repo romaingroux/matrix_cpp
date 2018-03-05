@@ -52,7 +52,7 @@ std::ostream& operator << (std::ostream& stream, const std::vector<T>& v)
 }
 
 
-/*
+
 // Matrix test suite
 SUITE(Matrix)
 {   // displays message
@@ -316,6 +316,366 @@ SUITE(Matrix)
         }
     }
 
+    // test the + operator
+    TEST(operator_addition)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,1) ; }
+            m1 = m1 + 1 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 2) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,1) ; }
+            m2 = m2 + 1 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 2) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,1) ; }
+            m3 = m3 + 1 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 2) ; }
+        }
+    }
+
+    // test the += operator
+    TEST(operator_plusequal)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,1) ; }
+            m1 += 1 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 2) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,1) ; }
+            m2 += 1 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 2) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,1) ; }
+            m3 += 1 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 2) ; }
+        }
+    }
+
+    // test the - operator
+    TEST(operator_substraction)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,3) ; }
+            m1 = m1 - 1 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 2) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,3) ; }
+            m2 = m2 - 1 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 2) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,3) ; }
+            m3 = m3 - 1 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 2) ; }
+        }
+    }
+
+    // test the -= operator
+    TEST(operator_minusequal)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,3) ; }
+            m1 -= 1 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 2) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,3) ; }
+            m2 -= 1 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 2) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,3) ; }
+            m3 -= 1 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 2) ; }
+        }
+    }
+
+    // test the * operator
+    TEST(operator_multiplication)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,3) ; }
+            m1 = m1 * 2 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 6) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,3) ; }
+            m2 = m2 * 2 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 6) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,3) ; }
+            m3 = m3 * 2 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 6) ; }
+        }
+    }
+
+    // tests the *= operator
+    TEST(operator_timeequal)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,3) ; }
+            m1 *= 2 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 6) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,3) ; }
+            m2 *= 2 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 6) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,3) ; }
+            m3 *= 2 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 6) ; }
+        }
+    }
+
+    // test the / operator
+    TEST(operator_division)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,6) ; }
+            m1 = m1 / 2 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 3) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,6) ; }
+            m2 = m2 / 2 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 3) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,6) ; }
+            m3 = m3 / 2 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 3) ; }
+        }
+    }
+
+    // tests the /= operator
+    TEST(operator_divideequal)
+    {   std::vector<size_t> dim_1, dim_2, dim_3 ;
+        size_t data_size_1, data_size_2, data_size_3 ;
+
+        // from 0D to 10D
+        for(size_t i=1; i<11; i++)
+        {
+            dim_1.push_back(i+1) ;
+            dim_2.push_back(i) ;
+            dim_3.push_back(0) ;
+
+            // has non-0 dimensions : 1 /1x2 / 1x2x3 / ... / 1x2x...x11
+            Matrix<int> m1(dim_1, i) ;
+            Matrix<int> m1_2(dim_1, i) ;
+            data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   m1.set(j,6) ; }
+            m1 /= 2 ;
+            for(size_t j=0; j<data_size_1; j++)
+            {   CHECK_EQUAL(m1.get(j), 3) ; }
+
+            // always has a zero dimension : 0 / 0x1 / 0x1x2/ ... / 0x1x...x10
+            Matrix<int> m2(dim_2, i) ;
+            Matrix<int> m2_2(dim_2, i) ;
+            data_size_2 = std::accumulate(dim_2.begin(), dim_2.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   m2.set(j,6) ; }
+            m2 /= 2 ;
+            for(size_t j=0; j<data_size_2; j++)
+            {   CHECK_EQUAL(m2.get(j), 3) ; }
+
+
+            // is a 0 dimension matrix : 0 / 0x0 / 0x0x...x0
+            Matrix<int> m3(dim_3, i) ;
+            Matrix<int> m3_2(dim_3, i) ;
+            data_size_3 = std::accumulate(dim_3.begin(), dim_3.end(), 1, std::multiplies<int>()) ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   m3.set(j,6) ; }
+            m3 /= 2 ;
+            for(size_t j=0; j<data_size_3; j++)
+            {   CHECK_EQUAL(m3.get(j), 3) ; }
+        }
+    }
+
     // tests the copy constuctor, not before because it uses the == operator to
     // check that the content of two matrices are equal.
     TEST(constructor_copy)
@@ -398,8 +758,6 @@ SUITE(Matrix)
         }
     }
 }
-
-*/
 
 
 SUITE(Matrix2D)
@@ -1251,3 +1609,4 @@ SUITE(Matrix4D)
         }
     }
 }
+

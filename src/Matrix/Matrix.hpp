@@ -6,7 +6,7 @@
 #include <numeric> // accumulate()
 #include <iostream>
 #include <iomanip>   // setw(), setprecision(), fixed
-#include <stdexcept> // out_of_range
+#include <stdexcept> // out_of_range, invalid_argument
 
 
 
@@ -181,6 +181,64 @@ class Matrix
          * \return a reference to the current instance.
          */
         Matrix& operator = (const Matrix& other) ;
+
+        /*!
+         * \brief Addition operator.
+         * \param value the value to add to each element.
+         * \return the resulting matrix.
+         */
+        Matrix operator + (T value) const ;
+
+        /*!
+         * \brief Substraction operator
+         * \param value the value to substract to each element.
+         * \return the resulting matrix.
+         */
+        Matrix operator - (T value) const ;
+
+        /*!
+         * \brief Multiplication operator.
+         * \param value the value to multiply each elements by.
+         * \return the resulting matrix.
+         */
+        Matrix operator * (T value) const ;
+
+        /*!
+         * \brief Division operator.
+         * \param value the value to divide each elements by.
+         * \throw std::invalid_argument if value is 0.
+         * \return the resulting matrix.
+         */
+        Matrix operator / (T value) const throw (std::invalid_argument) ;
+
+        /*!
+         * \brief Adds value to each element.
+         * \param value the value to add.
+         * \return a reference to the instance.
+         */
+        Matrix& operator += (T value) ;
+
+        /*!
+         * \brief Substracts value to each element.
+         * \param value the value to substract.
+         * \return a reference to the instance.
+         */
+        Matrix& operator -= (T value) ;
+
+        /*!
+         * \brief Multiplies each element by value.
+         * \param value the value to multiply the elements by.
+         * \return a reference to the instance.
+         */
+        Matrix& operator *= (T value) ;
+
+        /*!
+         * \brief Divides each element by value.
+         * \param value the value to multiply the elements by.
+         * \throw std::invalid_argument if value is 0.
+         * \return a reference to the instance.
+         */
+        Matrix& operator /= (T value) throw (std::invalid_argument) ;
 
         /*!
          * \brief Comparison operator, returns true if
@@ -411,6 +469,68 @@ Matrix<T>& Matrix<T>::operator = (const Matrix& other)
     this->_data      = other._data ;
     this->_data_size = other._data_size ;
     this->_dim_prod  = other._dim_prod ;
+    return *this ;
+}
+
+template<class T>
+Matrix<T> Matrix<T>::operator + (T value) const
+{   Matrix<T> other(*this) ;
+    other += value ;
+    return other ;
+}
+
+template<class T>
+Matrix<T> Matrix<T>::operator - (T value) const
+{   Matrix<T> other(*this) ;
+    other -= value ;
+    return other ;
+}
+
+template<class T>
+Matrix<T> Matrix<T>::operator * (T value) const
+{   Matrix<T> other(*this) ;
+    other *= value ;
+    return other ;
+}
+
+template<class T>
+Matrix<T> Matrix<T>::operator / (T value) const throw (std::invalid_argument)
+{   if(value == static_cast<T>(0))
+    {   throw std::invalid_argument("division by 0!") ; }
+    Matrix<T> other(*this) ;
+    other /= value ;
+    return other ;
+}
+
+template<class T>
+Matrix<T>& Matrix<T>::operator += (T value)
+{   for(auto& i : this->_data)
+    {   i += value ; }
+    return *this ;
+}
+
+template<class T>
+Matrix<T>& Matrix<T>::operator -= (T value)
+{   for(auto& i : this->_data)
+    {   i -= value ; }
+    return *this ;
+}
+
+template<class T>
+Matrix<T>& Matrix<T>::operator *= (T value)
+{   for(auto& i : this->_data)
+    {   i *= value ; }
+    return *this ;
+}
+
+template<class T>
+Matrix<T>& Matrix<T>::operator /= (T value) throw (std::invalid_argument)
+{
+    if(value == static_cast<T>(0))
+    {   throw std::invalid_argument("division by 0!") ; }
+
+    for(auto& i : this->_data)
+    {   i /= value ; }
     return *this ;
 }
 
