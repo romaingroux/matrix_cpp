@@ -95,7 +95,6 @@ SUITE(Matrix)
             CHECK_EQUAL(data_size_3, m3.get_data_size()) ;
             CHECK_EQUAL(data_size_3, m3.get_data().size()) ;
         }
-
     }
 
     // tests contructor with value
@@ -281,8 +280,7 @@ SUITE(Matrix)
 
         // from 0D to 10D
         for(size_t i=1; i<11; i++)
-        {
-            dim_1.push_back(i+1) ;
+        {   dim_1.push_back(i+1) ;
             dim_2.push_back(i) ;
             dim_3.push_back(0) ;
 
@@ -292,6 +290,7 @@ SUITE(Matrix)
             data_size_1 = std::accumulate(dim_1.begin(), dim_1.end(), 1, std::multiplies<int>()) ;
             for(size_t j=0; j<data_size_1; j++)
             {   m1.set(j,j) ; }
+
             m1_2 = m1 ;
             CHECK_EQUAL(true, m1 == m1_2) ;
 
@@ -1141,16 +1140,149 @@ SUITE(Matrix2D)
             }
         }
     }
+
+    // tests the + operator
+    TEST(operator_addition)
+    {
+        // has non-0 dimensions
+        Matrix2D<int> m1(10, 10) ;
+        Matrix2D<int> m2(10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,0) ; // not necessary but makes it explicite
+            m2.set(j,3) ;
+        }
+        Matrix2D<int> m3 = m1 + 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix2D<int> m4(10, 0) ;
+        Matrix2D<int> m5(10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,0) ; // not necessary but makes it explicite
+            m5.set(j,3) ;
+        }
+        Matrix2D<int> m6 = m4 + 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix2D<int> m7(0, 0) ;
+        Matrix2D<int> m8(0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,0) ; // not necessary but makes it explicite
+            m8.set(j,3) ;
+        }
+        Matrix2D<int> m9 = m7 + 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the - operator
+    TEST(operator_substraction)
+    {   // has non-0 dimensions
+        Matrix2D<int> m1(10, 10) ;
+        Matrix2D<int> m2(10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,0) ; // not necessary but makes it explicite
+            m2.set(j,-3) ;
+        }
+        Matrix2D<int> m3 = m1 - 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix2D<int> m4(10, 0) ;
+        Matrix2D<int> m5(10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,0) ; // not necessary but makes it explicite
+            m5.set(j,-3) ;
+        }
+        Matrix2D<int> m6 = m4 - 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix2D<int> m7(0, 0) ;
+        Matrix2D<int> m8(0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,0) ; // not necessary but makes it explicite
+            m8.set(j,-3) ;
+        }
+        Matrix2D<int> m9 = m7 - 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the * operator
+    TEST(operator_multiplication)
+    {   // has non-0 dimensions
+        Matrix2D<int> m1(10, 10) ;
+        Matrix2D<int> m2(10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,1) ; // not necessary but makes it explicite
+            m2.set(j,3) ;
+        }
+        Matrix2D<int> m3 = m1 * 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix2D<int> m4(10, 0) ;
+        Matrix2D<int> m5(10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,1) ;
+            m5.set(j,3) ;
+        }
+        Matrix2D<int> m6 = m4 * 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix2D<int> m7(0, 0) ;
+        Matrix2D<int> m8(0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,1) ;
+            m8.set(j,3) ;
+        }
+        Matrix2D<int> m9 = m7 * 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the / operator
+    TEST(operator_division)
+    {   // has non-0 dimensions
+        Matrix2D<int> m1(10, 10) ;
+        Matrix2D<int> m2(10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,3) ;
+            m2.set(j,1) ;
+        }
+        Matrix2D<int> m3 = m1 / 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix2D<int> m4(10, 0) ;
+        Matrix2D<int> m5(10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,3) ;
+            m5.set(j,1) ;
+        }
+        Matrix2D<int> m6 = m4 / 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix2D<int> m7(0, 0) ;
+        Matrix2D<int> m8(0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,3) ;
+            m8.set(j,1) ;
+        }
+        Matrix2D<int> m9 = m7 / 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+
+        // division by 0
+        CHECK_THROW(m9 / 0, std::invalid_argument) ;
+    }
 }
-
-
 
 
 SUITE(Matrix3D)
 {   // displays message
     TEST(message)
     {   std::cout << "Starting Matrix3D tests..." << std::endl ; }
-
 
     // tests constructor
     TEST(constructor)
@@ -1362,6 +1494,142 @@ SUITE(Matrix3D)
                 }
             }
         }
+    }
+
+    // tests the + operator
+    TEST(operator_addition)
+    {
+        // has non-0 dimensions
+        Matrix3D<int> m1(10, 10, 10) ;
+        Matrix3D<int> m2(10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,0) ; // not necessary but makes it explicite
+            m2.set(j,3) ;
+        }
+        Matrix3D<int> m3 = m1 + 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix3D<int> m4(10, 10, 0) ;
+        Matrix3D<int> m5(10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,0) ; // not necessary but makes it explicite
+            m5.set(j,3) ;
+        }
+        Matrix3D<int> m6 = m4 + 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix3D<int> m7(0, 0, 0) ;
+        Matrix3D<int> m8(0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,0) ; // not necessary but makes it explicite
+            m8.set(j,3) ;
+        }
+        Matrix3D<int> m9 = m7 + 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the - operator
+    TEST(operator_substraction)
+    {   // has non-0 dimensions
+        Matrix3D<int> m1(10, 10, 10) ;
+        Matrix3D<int> m2(10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,0) ; // not necessary but makes it explicite
+            m2.set(j,-3) ;
+        }
+        Matrix3D<int> m3 = m1 - 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix3D<int> m4(10, 10, 0) ;
+        Matrix3D<int> m5(10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,0) ; // not necessary but makes it explicite
+            m5.set(j,-3) ;
+        }
+        Matrix3D<int> m6 = m4 - 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix3D<int> m7(0, 0, 0) ;
+        Matrix3D<int> m8(0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,0) ; // not necessary but makes it explicite
+            m8.set(j,-3) ;
+        }
+        Matrix3D<int> m9 = m7 - 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the * operator
+    TEST(operator_multiplication)
+    {   // has non-0 dimensions
+        Matrix3D<int> m1(10, 10, 10) ;
+        Matrix3D<int> m2(10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,1) ; // not necessary but makes it explicite
+            m2.set(j,3) ;
+        }
+        Matrix3D<int> m3 = m1 * 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix3D<int> m4(10, 10, 0) ;
+        Matrix3D<int> m5(10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,1) ;
+            m5.set(j,3) ;
+        }
+        Matrix3D<int> m6 = m4 * 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix3D<int> m7(0, 0, 0) ;
+        Matrix3D<int> m8(0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,1) ;
+            m8.set(j,3) ;
+        }
+        Matrix3D<int> m9 = m7 * 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the / operator
+    TEST(operator_division)
+    {   // has non-0 dimensions
+        Matrix3D<int> m1(10, 10, 10) ;
+        Matrix3D<int> m2(10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,3) ;
+            m2.set(j,1) ;
+        }
+        Matrix3D<int> m3 = m1 / 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix3D<int> m4(10, 10, 0) ;
+        Matrix3D<int> m5(10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,3) ;
+            m5.set(j,1) ;
+        }
+        Matrix3D<int> m6 = m4 / 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix3D<int> m7(0, 0, 0) ;
+        Matrix3D<int> m8(0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,3) ;
+            m8.set(j,1) ;
+        }
+        Matrix3D<int> m9 = m7 / 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+
+        // division by 0
+        CHECK_THROW(m9 / 0, std::invalid_argument) ;
     }
 }
 
@@ -1607,6 +1875,142 @@ SUITE(Matrix4D)
                 }
             }
         }
+    }
+
+    // tests the + operator
+    TEST(operator_addition)
+    {
+        // has non-0 dimensions
+        Matrix4D<int> m1(10, 10, 10, 10) ;
+        Matrix4D<int> m2(10, 10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,0) ; // not necessary but makes it explicite
+            m2.set(j,3) ;
+        }
+        Matrix4D<int> m3 = m1 + 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix4D<int> m4(10, 10, 10, 0) ;
+        Matrix4D<int> m5(10, 10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,0) ; // not necessary but makes it explicite
+            m5.set(j,3) ;
+        }
+        Matrix4D<int> m6 = m4 + 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix4D<int> m7(0, 0, 0, 0) ;
+        Matrix4D<int> m8(0, 0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,0) ; // not necessary but makes it explicite
+            m8.set(j,3) ;
+        }
+        Matrix4D<int> m9 = m7 + 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the - operator
+    TEST(operator_substraction)
+    {   // has non-0 dimensions
+        Matrix4D<int> m1(10, 10, 10, 10) ;
+        Matrix4D<int> m2(10, 10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,0) ; // not necessary but makes it explicite
+            m2.set(j,-3) ;
+        }
+        Matrix4D<int> m3 = m1 - 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix4D<int> m4(10, 10, 10, 0) ;
+        Matrix4D<int> m5(10, 10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,0) ; // not necessary but makes it explicite
+            m5.set(j,-3) ;
+        }
+        Matrix4D<int> m6 = m4 - 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix4D<int> m7(0, 0, 0, 0) ;
+        Matrix4D<int> m8(0, 0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,0) ; // not necessary but makes it explicite
+            m8.set(j,-3) ;
+        }
+        Matrix4D<int> m9 = m7 - 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the * operator
+    TEST(operator_multiplication)
+    {   // has non-0 dimensions
+        Matrix4D<int> m1(10, 10, 10, 10) ;
+        Matrix4D<int> m2(10, 10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,1) ; // not necessary but makes it explicite
+            m2.set(j,3) ;
+        }
+        Matrix4D<int> m3 = m1 * 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix4D<int> m4(10, 10, 10, 0) ;
+        Matrix4D<int> m5(10, 10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,1) ;
+            m5.set(j,3) ;
+        }
+        Matrix4D<int> m6 = m4 * 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix4D<int> m7(0, 0, 0, 0) ;
+        Matrix4D<int> m8(0, 0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,1) ;
+            m8.set(j,3) ;
+        }
+        Matrix4D<int> m9 = m7 * 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+    }
+
+    // tests the / operator
+    TEST(operator_division)
+    {   // has non-0 dimensions
+        Matrix4D<int> m1(10, 10, 10, 10) ;
+        Matrix4D<int> m2(10, 10, 10, 10) ;
+        for(size_t j=0; j<m1.get_data_size(); j++)
+        {   m1.set(j,3) ;
+            m2.set(j,1) ;
+        }
+        Matrix4D<int> m3 = m1 / 3 ;
+        CHECK_EQUAL(true, m3 == m2) ;
+
+        // has a zero dimension
+        Matrix4D<int> m4(10, 10, 10, 0) ;
+        Matrix4D<int> m5(10, 10, 10, 0) ;
+        for(size_t j=0; j<m4.get_data_size(); j++)
+        {   m4.set(j,3) ;
+            m5.set(j,1) ;
+        }
+        Matrix4D<int> m6 = m4 / 3 ;
+        CHECK_EQUAL(true, m6 == m5) ;
+
+        // is a 0 dimension matrix
+        Matrix4D<int> m7(0, 0, 0, 0) ;
+        Matrix4D<int> m8(0, 0, 0, 0) ;
+        for(size_t j=0; j<m7.get_data_size(); j++)
+        {   m7.set(j,3) ;
+            m8.set(j,1) ;
+        }
+        Matrix4D<int> m9 = m7 / 3 ;
+        CHECK_EQUAL(true, m9 == m8) ;
+
+        // division by 0
+        CHECK_THROW(m9 / 0, std::invalid_argument) ;
     }
 }
 

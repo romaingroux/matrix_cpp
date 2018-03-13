@@ -213,12 +213,77 @@ class Matrix4D : public Matrix<T>
 
 } ;
 
+// operators
+/*!
+ * \brief Addition operator.
+ * \param m the matrix of interest
+ * \param value the value to add to each element.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix4D<T> operator + (Matrix4D<T> m, T value)
+{   Matrix4D<T> other(m) ;
+    m += value ;
+    return m ;
+}
+
+/*!
+ * \brief Substraction operator
+ * \param m the matrix of interest.
+ * \param value the value to substract to each element.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix4D<T> operator - (Matrix4D<T> m, T value)
+{    Matrix4D<T> other(m) ;
+     m -= value ;
+     return m ;
+}
+
+/*!
+ * \brief Multiplication operator.
+ * \param m the matrix of interest.
+ * \param value the value to multiply each elements by.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix4D<T> operator * (Matrix4D<T> m, T value)
+{    Matrix4D<T> other(m) ;
+     m *= value ;
+     return m ;
+}
+
+/*!
+ * \brief Division operator.
+ * \param m the matrix of interest.
+ * \param value the value to divide each elements by.
+ * \throw std::invalid_argument if value is 0.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix4D<T> operator / (Matrix4D<T> m, T value) throw (std::invalid_argument)
+{   if(value == static_cast<T>(0))
+    {   throw std::invalid_argument("division by 0!") ; }
+    Matrix4D<T> other(m) ;
+    other /= value ;
+    return other ;
+}
+
+/*!
+ * \brief Sends a representation of the matrix to the stream.
+ * \param stream the stream of interest.
+ * \param m the matrix of interest.
+ * \return a reference to the stream.
+ */
 template<class T>
 std::ostream& operator << (std::ostream& stream, const Matrix4D<T>& m)
 {   m.print(stream) ;
     return stream ;
 }
 
+
+
+// method implementation
 template<class T>
 Matrix4D<T>::Matrix4D(size_t dim1, size_t dim2, size_t dim3, size_t dim4)
     : Matrix<T>({dim1, dim2, dim3, dim4}, 0)

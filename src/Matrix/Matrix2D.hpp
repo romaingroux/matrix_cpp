@@ -180,6 +180,62 @@ class Matrix2D : public Matrix<T>
 
 } ;
 
+// operators
+/*!
+ * \brief Addition operator.
+ * \param m the matrix of interest
+ * \param value the value to add to each element.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix2D<T> operator + (Matrix2D<T> m, T value)
+{   Matrix2D<T> other(m) ;
+    m += value ;
+    return m ;
+}
+
+/*!
+ * \brief Substraction operator
+ * \param m the matrix of interest.
+ * \param value the value to substract to each element.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix2D<T> operator - (Matrix2D<T> m, T value)
+{    Matrix2D<T> other(m) ;
+     m -= value ;
+     return m ;
+}
+
+/*!
+ * \brief Multiplication operator.
+ * \param m the matrix of interest.
+ * \param value the value to multiply each elements by.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix2D<T> operator * (Matrix2D<T> m, T value)
+{    Matrix2D<T> other(m) ;
+     m *= value ;
+     return m ;
+}
+
+/*!
+ * \brief Division operator.
+ * \param m the matrix of interest.
+ * \param value the value to divide each elements by.
+ * \throw std::invalid_argument if value is 0.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix2D<T> operator / (Matrix2D<T> m, T value) throw (std::invalid_argument)
+{   if(value == static_cast<T>(0))
+    {   throw std::invalid_argument("division by 0!") ; }
+    Matrix2D<T> other(m) ;
+    other /= value ;
+    return other ;
+}
+
 /*!
  * \brief Sends a representation of the matrix to the stream.
  * \param stream the stream of interest.
@@ -192,7 +248,7 @@ std::ostream& operator << (std::ostream& stream, const Matrix2D<T>& m)
     return stream ;
 }
 
-
+// other usefull functions
 /*!
  * \brief Produces a transpose of the given matrix.
  * \param m a matrix.
@@ -201,8 +257,7 @@ template<class T>
 Matrix2D<T> transpose(const Matrix2D<T>& m) ;
 
 
-
-
+// method implementation
 template<class T>
 Matrix2D<T> transpose(const Matrix2D<T>& m)
 {   std::vector<size_t> dim = m.get_dim() ;

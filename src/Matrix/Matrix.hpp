@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>   // setw(), setprecision(), fixed
 #include <stdexcept> // out_of_range, invalid_argument
+#include <utility>   // swap()f
 
 
 
@@ -163,6 +164,11 @@ class Matrix
          */
         size_t get_data_size() const ;
 
+        /*!
+         * \brief Returns the partial products of the dimensions.
+         * \return the partial products of the dimensions.
+         */
+        std::vector<size_t> get_dim_product() const ;
 		
         /*!
          * \brief Produces a nice representation of the matrix on the given
@@ -180,36 +186,7 @@ class Matrix
          * \param other an other matrix to copy the values from.
          * \return a reference to the current instance.
          */
-        Matrix& operator = (const Matrix& other) ;
-
-        /*!
-         * \brief Addition operator.
-         * \param value the value to add to each element.
-         * \return the resulting matrix.
-         */
-        Matrix operator + (T value) const ;
-
-        /*!
-         * \brief Substraction operator
-         * \param value the value to substract to each element.
-         * \return the resulting matrix.
-         */
-        Matrix operator - (T value) const ;
-
-        /*!
-         * \brief Multiplication operator.
-         * \param value the value to multiply each elements by.
-         * \return the resulting matrix.
-         */
-        Matrix operator * (T value) const ;
-
-        /*!
-         * \brief Division operator.
-         * \param value the value to divide each elements by.
-         * \throw std::invalid_argument if value is 0.
-         * \return the resulting matrix.
-         */
-        Matrix operator / (T value) const throw (std::invalid_argument) ;
+        Matrix& operator = (const Matrix<T>& other) ;
 
         /*!
          * \brief Adds value to each element.
@@ -371,6 +348,61 @@ class Matrix
         std::vector<size_t> _dim_prod ;
 } ;
 
+// operators
+/*!
+ * \brief Addition operator.
+ * \param m the matrix of interest
+ * \param value the value to add to each element.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix<T> operator + (Matrix<T> m, T value)
+{   Matrix<T> other(m) ;
+    other += value ;
+    return other ;
+}
+
+/*!
+ * \brief Substraction operator
+ * \param m the matrix of interest.
+ * \param value the value to substract to each element.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix<T> operator - (Matrix<T> m, T value)
+{   Matrix<T> other(m) ;
+    other -= value ;
+    return other ;
+}
+
+/*!
+ * \brief Multiplication operator.
+ * \param m the matrix of interest.
+ * \param value the value to multiply each elements by.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix<T> operator * (Matrix<T> m, T value)
+{   Matrix<T> other(m) ;
+    other *= value ;
+    return other ;
+}
+
+/*!
+ * \brief Division operator.
+ * \param m the matrix of interest.
+ * \param value the value to divide each elements by.
+ * \throw std::invalid_argument if value is 0.
+ * \return the resulting matrix.
+ */
+template<class T>
+const Matrix<T> operator / (Matrix<T> m, T value) throw (std::invalid_argument)
+{   if(value == static_cast<T>(0))
+    {   throw std::invalid_argument("division by 0!") ; }
+    Matrix<T> other(m) ;
+    other /= value ;
+    return other ;
+}
 
 /*!
  * \brief Sends a representation of the matrix to the stream.
@@ -386,6 +418,7 @@ std::ostream& operator << (std::ostream& stream, const Matrix<T>& m)
 
 
 
+// method implementation
 template<class T>
 Matrix<T>::Matrix(const std::vector<size_t>& dim)
     : Matrix(dim, 0)
@@ -455,6 +488,10 @@ size_t Matrix<T>::get_data_size() const
 {   return this->_data_size ; }
 
 template<class T>
+std::vector<size_t> Matrix<T>::get_dim_product() const
+{   return this->_dim_prod ; }
+
+template<class T>
 void Matrix<T>::print(std::ostream& stream, size_t precision, size_t width, char sep) const
 {	stream.setf(std::ios::left) ;
     stream << std::setprecision(precision) << std::fixed ;
@@ -463,43 +500,14 @@ void Matrix<T>::print(std::ostream& stream, size_t precision, size_t width, char
 }
 
 template<class T>
-Matrix<T>& Matrix<T>::operator = (const Matrix& other)
-{   this->_dim       = other._dim ;
+Matrix<T>& Matrix<T>::operator = (const Matrix<T>& other)
+{
+    this->_dim       = other._dim ;
     this->_dim_size  = other._dim_size ;
     this->_data      = other._data ;
     this->_data_size = other._data_size ;
     this->_dim_prod  = other._dim_prod ;
     return *this ;
-}
-
-template<class T>
-Matrix<T> Matrix<T>::operator + (T value) const
-{   Matrix<T> other(*this) ;
-    other += value ;
-    return other ;
-}
-
-template<class T>
-Matrix<T> Matrix<T>::operator - (T value) const
-{   Matrix<T> other(*this) ;
-    other -= value ;
-    return other ;
-}
-
-template<class T>
-Matrix<T> Matrix<T>::operator * (T value) const
-{   Matrix<T> other(*this) ;
-    other *= value ;
-    return other ;
-}
-
-template<class T>
-Matrix<T> Matrix<T>::operator / (T value) const throw (std::invalid_argument)
-{   if(value == static_cast<T>(0))
-    {   throw std::invalid_argument("division by 0!") ; }
-    Matrix<T> other(*this) ;
-    other /= value ;
-    return other ;
 }
 
 template<class T>
