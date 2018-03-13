@@ -428,7 +428,7 @@ template<class T>
 Matrix<T>::Matrix(const std::vector<size_t>& dim, T value)
 {   this->_dim_size  = dim.size() ;
     this->_dim       = this->swap_coord(dim) ;
-    this->_data_size = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<T>()) ;
+    this->_data_size = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<size_t>()) ;
     this->_data      = std::vector<T>(this->_data_size, value) ;
 
     this->compute_dim_product() ;
