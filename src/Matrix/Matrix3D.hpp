@@ -52,7 +52,10 @@ class Matrix3D : public Matrix<T>
 {
     public:
         // constructors
-        Matrix3D() = default ;
+        /*!
+         * \brief Default constructor, initialises an empty matrix.
+         */
+        Matrix3D() ;
         /*!
          * \brief Constructs a matrix with the given dimensions,
          * filled with 0 values.
@@ -233,6 +236,11 @@ std::ostream& operator << (std::ostream& stream, const Matrix3D<T>& m)
 
 
 // method implementation
+template<class T>
+Matrix3D<T>::Matrix3D()
+    : Matrix<T>()
+{}
+
 template<class T>
 Matrix3D<T>::Matrix3D(size_t dim1, size_t dim2, size_t dim3)
     : Matrix3D<T>(dim1, dim2, dim3, 0)

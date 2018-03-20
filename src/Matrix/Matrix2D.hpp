@@ -38,7 +38,10 @@ class Matrix2D : public Matrix<T>
 {
     public:
         // constructors
-        Matrix2D() = default ;
+        /*!
+         * \brief Default constructor, initialises an empty matrix.
+         */
+        Matrix2D() ;
         /*!
          * \brief Constructs a matrix with the given dimensions,
          * filled with 0 values.
@@ -271,6 +274,10 @@ Matrix2D<T> transpose(const Matrix2D<T>& m)
     return m2 ;
 }
 
+template<class T>
+Matrix2D<T>::Matrix2D()
+    : Matrix<T>()
+{}
 
 template<class T>
 Matrix2D<T>::Matrix2D(size_t nrow, size_t ncol)

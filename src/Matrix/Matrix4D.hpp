@@ -59,7 +59,11 @@ class Matrix4D : public Matrix<T>
 {
     public:
         // constructors
-        Matrix4D() = default ;
+        /*!
+         * \brief Default constructor, initialises an empty matrix.
+         */
+        Matrix4D() ;
+
         /*!
          * \brief Constructs a matrix with the given dimensions,
          * filled with 0 values.
@@ -284,6 +288,11 @@ std::ostream& operator << (std::ostream& stream, const Matrix4D<T>& m)
 
 
 // method implementation
+template<class T>
+Matrix4D<T>::Matrix4D()
+    : Matrix<T>()
+{}
+
 template<class T>
 Matrix4D<T>::Matrix4D(size_t dim1, size_t dim2, size_t dim3, size_t dim4)
     : Matrix<T>({dim1, dim2, dim3, dim4}, 0)

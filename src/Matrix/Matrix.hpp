@@ -72,7 +72,10 @@ class Matrix
 {
     public:
         // constructors
-        Matrix() = default ;
+        /*!
+         * \brief Default constructor, initialises an empty matrix.
+         */
+        Matrix() ;
         /*!
          * \brief Constructs an matrix with the given dimension with
          * 0 values.
@@ -419,6 +422,11 @@ std::ostream& operator << (std::ostream& stream, const Matrix<T>& m)
 
 
 // method implementation
+template<class T>
+Matrix<T>::Matrix()
+    :_dim(), _data(), _dim_size(0), _data_size(0), _dim_prod()
+{}
+
 template<class T>
 Matrix<T>::Matrix(const std::vector<size_t>& dim)
     : Matrix(dim, 0)
