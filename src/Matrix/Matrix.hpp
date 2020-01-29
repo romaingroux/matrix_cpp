@@ -5,6 +5,7 @@
 #include <vector>
 #include <numeric> // accumulate()
 #include <iostream>
+#include <fstream>
 #include <iomanip>   // setw(), setprecision(), fixed
 #include <stdexcept> // out_of_range, invalid_argument
 #include <utility>   // swap()f
@@ -65,6 +66,18 @@
  * that the user given coordinates can be used in this referencial.
  *
  *
+ * A format to save a Matrix objects in a binary file is defined. The following values
+ * are written :
+ * 1x size_t :     the number <N> of dimensions of the Matrix stored. This is the value
+ *                 of _dim_size field.
+ * Nx size_t :     the width of the matrix in each dimension. These values correspond
+ *                 to the content of the _dim vector and can be loaded inside this
+ *                 vector as they are.
+ * Dx <T> values : the <D> values contained in the matrix, in the _data vector.
+ *                 These values can be loaded directly in this vector. <D> is equal to the
+ *                 product of the <N> values stored right before. The type <T> depends on
+ *                 the type of the data stored in the matrix. The 1st of the D values is
+ *                 also the first value of the _data vector.
  */
 
 template <class T>
@@ -72,10 +85,7 @@ class Matrix
 {
     public:
         // constructors
-        /*!
-         * \brief Default constructor, initialises an empty matrix.
-         */
-        Matrix() ;
+        Matrix() = default ;
         /*!
          * \brief Constructs an matrix with the given dimension with
          * 0 values.
@@ -95,14 +105,42 @@ class Matrix
          * \brief Copy constructor.
          * \param other the matrix to copy.
          */
-        Matrix (const Matrix& other) ;
+        Matrix(const Matrix& other) ;
+
+        /*!
+         * \brief Move constructor.
+         * \param other the matrix to use.
+         */
+        Matrix(Matrix&& other) ;
 
         /*!
          * \brief Destructor.
          */
-        virtual ~Matrix() = default ;
+        virtual ~Matrix() ;
 
         // methods
+        /*!
+         * \brief loads a matrix from the given binary
+         * file.
+         * \param path the path to the file to read.
+         * \param dim_n the expected number of dimensions
+         * of the matrix.
+         * \throw std::invalid_argument if the dimensionality
+         * of the matrix stored in the file is not equal to
+         * the expected number of dimensions and
+         * std::runtime_error if any reading error
+         * occures.
+         */
+        virtual void load(const std::string& file_address,
+                          size_t dim_n) ;
+
+        /*!
+         * \brief writes to content of the matrix
+         * to a given binary file.
+         * \param path the path to the file.
+         */
+        virtual void save(const std::string& file_address) ;
+
         /*!
          * \brief Gets the element at the given offset.
          * \param offset the offset of the element to get.
@@ -110,7 +148,7 @@ class Matrix
          * is out of range.
          * \return the element.
          */
-        T get(size_t offset) const throw(std::out_of_range) ;
+        T get(size_t offset) const ;
 
         /*!
          * \brief Gets the element at the given coordinates.
@@ -119,7 +157,7 @@ class Matrix
          * are out of range.
          * \return the element.
          */
-        T get(const std::vector<size_t>& coord) const throw(std::out_of_range) ;
+        T get(const std::vector<size_t>& coord) const ;
 
         /*!
          * \brief Sets the element at the given offset
@@ -129,7 +167,7 @@ class Matrix
          * \throw std::out_of_range exception if the offset
          * is out of range.
          */
-        void set(size_t offset, T value) throw(std::out_of_range) ;
+        void set(size_t offset, T value) ;
         /*!
          * \brief Sets the element at the given coordinates
          * to the given value.
@@ -138,7 +176,7 @@ class Matrix
          * \throw std::out_of_range exception if the coordinates
          * are out of range.
          */
-        void set(const std::vector<size_t>& coord, T value) throw(std::out_of_range) ;
+        void set(const std::vector<size_t>& coord, T value) ;
 
         /*!
          * \brief Gets the matrix dimensions.
@@ -192,6 +230,13 @@ class Matrix
         Matrix& operator = (const Matrix<T>& other) ;
 
         /*!
+         * \brief Move assignment operator.
+         * \param other an other matrix to use the values from.
+         * \return a reference to the current instance.
+         */
+        Matrix& operator = (Matrix<T>&& other) ;
+
+        /*!
          * \brief Adds value to each element.
          * \param value the value to add.
          * \return a reference to the instance.
@@ -218,7 +263,7 @@ class Matrix
          * \throw std::invalid_argument if value is 0.
          * \return a reference to the instance.
          */
-        Matrix& operator /= (T value) throw (std::invalid_argument) ;
+        Matrix& operator /= (T value) ;
 
         /*!
          * \brief Comparison operator, returns true if
@@ -329,7 +374,7 @@ class Matrix
         /*!
          * \brief Stores the data.
          */
-        std::vector<T> _data ;
+        std::vector<T>* _data ;
         /*!
          * \brief The number of dimensions.
          */
@@ -338,7 +383,6 @@ class Matrix
          * \brief The number of data elements stored.
          */
         size_t _data_size ;
-
         /*!
          * \brief Contains the partial product of the dimensions. That is,
          * the ith element contains the product of all the i-1 precedent
@@ -399,7 +443,7 @@ const Matrix<T> operator * (Matrix<T> m, T value)
  * \return the resulting matrix.
  */
 template<class T>
-const Matrix<T> operator / (Matrix<T> m, T value) throw (std::invalid_argument)
+const Matrix<T> operator / (Matrix<T> m, T value)
 {   if(value == static_cast<T>(0))
     {   throw std::invalid_argument("division by 0!") ; }
     Matrix<T> other(m) ;
@@ -423,11 +467,6 @@ std::ostream& operator << (std::ostream& stream, const Matrix<T>& m)
 
 // method implementation
 template<class T>
-Matrix<T>::Matrix()
-    :_dim(), _data(), _dim_size(0), _data_size(0), _dim_prod()
-{}
-
-template<class T>
 Matrix<T>::Matrix(const std::vector<size_t>& dim)
     : Matrix(dim, 0)
 {}
@@ -436,46 +475,175 @@ template<class T>
 Matrix<T>::Matrix(const std::vector<size_t>& dim, T value)
 {   this->_dim_size  = dim.size() ;
     this->_dim       = this->swap_coord(dim) ;
-    this->_data_size = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<size_t>()) ;
-    this->_data      = std::vector<T>(this->_data_size, value) ;
+    this->_data_size = std::accumulate(dim.begin(), dim.end(), (size_t)1, std::multiplies<size_t>()) ;
+    this->_data      = new std::vector<T>(this->_data_size, value) ;
+    this->compute_dim_product() ;
+}
+
+template<class T>
+Matrix<T>::Matrix(const Matrix& other)
+{   this->_dim_size  = other._dim_size ;
+    this->_dim       = other._dim ;
+    this->_data_size = other._data_size ;
+    this->_data      = new std::vector<T>(*(other._data)) ;
+    this->_dim_prod  = other._dim_prod ;
+}
+
+template<class T>
+Matrix<T>::Matrix(Matrix<T>&& other)
+{   this->_dim_size  = other._dim_size ;
+    this->_dim       = other._dim ;
+    this->_data_size = other._data_size ;
+    this->_data      = other._data ;
+    other._data      = nullptr ;
+    this->_dim_prod  = other._dim_prod ;
+}
+
+template<class T>
+Matrix<T>::~Matrix()
+{   if(this->_data != nullptr)
+    {   delete this->_data ;
+        this->_data = nullptr ;
+    }
+}
+
+template<class T>
+void Matrix<T>::load(const std::string& file_address,
+                     size_t dim_n)
+{
+    // open
+    std::ifstream file(file_address, std::ifstream::in | std::ifstream::binary) ;
+    if(file.fail())
+    {   char msg[4096] ;
+        sprintf(msg, "error! cannot open %s", file_address.c_str()) ;
+        throw std::runtime_error(msg) ;
+    }
+
+    // read number of dimensions
+    file.read((char*) &(this->_dim_size), sizeof(size_t)) ;
+    if(not file)
+    {   file.close() ;
+        char msg[4096] ;
+        sprintf(msg, "Error! something occured while reading number of dimensions in %s",
+                file_address.c_str()) ;
+        throw std::invalid_argument(msg) ;
+    }
+    // this file does not store a matrix with the expected dimensions
+    if(this->_dim_size != dim_n)
+    {   file.close() ;
+        char msg[4096] ;
+        sprintf(msg, "Error! Invalid number of dimensions (%zu) found in %s",
+                this->_dim_size,
+                file_address.c_str()) ;
+        throw std::runtime_error(msg) ;
+    }
+
+    // read dimensions
+    this->_dim = std::vector<size_t>(this->_dim_size) ;
+    file.read((char*) &(this->_dim[0]), this->_dim_size*sizeof(size_t)) ;
+    if(not file)
+    {   file.close() ;
+        char msg[4096] ;
+        sprintf(msg, "Error! something occured while reading dimensions in %s",
+                file_address.c_str()) ;
+        throw std::runtime_error(msg) ;
+    }
+
+    // read data
+    this->_data_size = std::accumulate(this->_dim.begin(),
+                                    this->_dim.end(),
+                                    (size_t)1,
+                                    std::multiplies<size_t>()) ;
+    this->_data = new std::vector<T>(this->_data_size) ;
+    file.read((char*) &((*this->_data)[0]), this->_data_size*sizeof(T)) ;
+    if(not file)
+    {   file.close() ;
+        char msg[4096] ;
+        sprintf(msg, "Error! something occured while reading data in %s",
+                file_address.c_str()) ;
+        throw std::runtime_error(msg) ;
+    }
+
+    file.close() ;
 
     this->compute_dim_product() ;
 }
 
 template<class T>
-Matrix<T>::Matrix(const Matrix &other)
-{   *this = other ; }
+void Matrix<T>::save(const std::string &file_address)
+{
+    // open
+    std::ofstream file(file_address, std::ifstream::out | std::ifstream::binary) ;
+    if(file.fail())
+    {   char msg[4096] ;
+        sprintf(msg, "error! cannot open %s", file_address.c_str()) ;
+        throw std::runtime_error(msg) ;
+    }
 
+    // write number of dimensions
+    file.write((char*) &this->_dim_size, sizeof(size_t)) ;
+    if(not file)
+    {   char msg[4096] ;
+        sprintf(msg, "Error! something happened while writting dimension number to %s",
+                file_address.c_str()) ;
+        file.close() ;
+        throw std::runtime_error(msg) ;
+    }
 
-template<class T>
-T Matrix<T>::get(size_t offset) const throw(std::out_of_range)
-{   if(not this->is_valid(offset))
-    {   throw std::out_of_range("offset is out of range!") ; }
-    return this->_data[offset] ;
+    // write dimensions
+    for(auto x : this->_dim)
+    {   file.write((char*) &x, sizeof(size_t)) ;
+        if(not file)
+        {   char msg[4096] ;
+            sprintf(msg, "Error! something happened while writting dimensions to %s",
+                    file_address.c_str()) ;
+            file.close() ;
+            throw std::runtime_error(msg) ;
+        }
+    }
+
+    // write data
+    file.write((char*) &((*this->_data)[0]), this->_data_size*sizeof(T)) ;
+    if(not file)
+    {   char msg[4096] ;
+        sprintf(msg, "Error! something happened while writting data to %s",
+                file_address.c_str()) ;
+        file.close() ;
+        throw std::runtime_error(msg) ;
+    }
+
+    file.close() ;
 }
 
 template<class T>
-T Matrix<T>::get(const std::vector<size_t>& coord) const throw(std::out_of_range)
+T Matrix<T>::get(size_t offset) const
+{   if(not this->is_valid(offset))
+    {   throw std::out_of_range("offset is out of range!") ; }
+    return (*this->_data)[offset] ;
+}
+
+template<class T>
+T Matrix<T>::get(const std::vector<size_t>& coord) const
 {   std::vector<size_t> coord_new = this->swap_coord(coord) ;
     if(not this->is_valid(coord_new))
     {   throw std::out_of_range("coordinates are out of range!") ; }
-    return this->_data[this->convert_to_offset(coord_new)] ;
+    return (*this->_data)[this->convert_to_offset(coord_new)] ;
 }
 
 
 template<class T>
-void Matrix<T>::set(size_t offset, T value) throw(std::out_of_range)
+void Matrix<T>::set(size_t offset, T value)
 {   if(not this->is_valid(offset))
     {   throw std::out_of_range("offset is out of range!") ; }
-    this->_data[offset] = value ;
+    (*this->_data)[offset] = value ;
 }
 
 template<class T>
-void Matrix<T>::set(const std::vector<size_t>& coord, T value) throw(std::out_of_range)
+void Matrix<T>::set(const std::vector<size_t>& coord, T value)
 {   std::vector<size_t> coord_new = this->swap_coord(coord) ;
     if(not this->is_valid(coord_new))
     {   throw std::out_of_range("coordinates are out of range!") ; }
-    this->_data[this->convert_to_offset(coord_new)] = value ;
+    (*this->_data)[this->convert_to_offset(coord_new)] = value ;
 }
 
 
@@ -485,7 +653,7 @@ std::vector<size_t> Matrix<T>::get_dim() const
 
 template<class T>
 std::vector<T> Matrix<T>::get_data()
-{   return this->_data ; }
+{   return (*this->_data) ; }
 
 template<class T>
 size_t Matrix<T>::get_dim_size() const
@@ -509,10 +677,20 @@ void Matrix<T>::print(std::ostream& stream, size_t precision, size_t width, char
 
 template<class T>
 Matrix<T>& Matrix<T>::operator = (const Matrix<T>& other)
-{
-    this->_dim       = other._dim ;
+{   this->_dim       = other._dim ;
+    this->_dim_size  = other._dim_size ;
+    this->_data      = new std::vector<T>(*other._data) ;
+    this->_data_size = other._data_size ;
+    this->_dim_prod  = other._dim_prod ;
+    return *this ;
+}
+
+template<class T>
+Matrix<T>& Matrix<T>::operator = (Matrix<T>&& other)
+{   this->_dim       = other._dim ;
     this->_dim_size  = other._dim_size ;
     this->_data      = other._data ;
+    other._data      = nullptr ;
     this->_data_size = other._data_size ;
     this->_dim_prod  = other._dim_prod ;
     return *this ;
@@ -520,32 +698,32 @@ Matrix<T>& Matrix<T>::operator = (const Matrix<T>& other)
 
 template<class T>
 Matrix<T>& Matrix<T>::operator += (T value)
-{   for(auto& i : this->_data)
+{   for(auto& i : (*this->_data))
     {   i += value ; }
     return *this ;
 }
 
 template<class T>
 Matrix<T>& Matrix<T>::operator -= (T value)
-{   for(auto& i : this->_data)
+{   for(auto& i : (*this->_data))
     {   i -= value ; }
     return *this ;
 }
 
 template<class T>
 Matrix<T>& Matrix<T>::operator *= (T value)
-{   for(auto& i : this->_data)
+{   for(auto& i : (*this->_data))
     {   i *= value ; }
     return *this ;
 }
 
 template<class T>
-Matrix<T>& Matrix<T>::operator /= (T value) throw (std::invalid_argument)
+Matrix<T>& Matrix<T>::operator /= (T value)
 {
     if(value == static_cast<T>(0))
     {   throw std::invalid_argument("division by 0!") ; }
 
-    for(auto& i : this->_data)
+    for(auto& i : (*this->_data))
     {   i /= value ; }
     return *this ;
 }
@@ -565,7 +743,7 @@ bool Matrix<T>::operator == (const Matrix<T>& other) const
     if(this->_data_size != other._data_size)
     {   return false ; }
     for(size_t i=0; i<this->_data_size; i++)
-    {   if(this->_data[i] != other._data[i])
+    {   if((*this->_data)[i] != (*other._data)[i])
         {   return false ; }
     }
     return true ;
@@ -578,13 +756,13 @@ bool Matrix<T>::operator !=(const Matrix<T>& other) const
 template<class T>
 T& Matrix<T>::operator () (const std::vector<size_t>& coord)
 {   std::vector<size_t> coord_new = this->swap_coord(coord) ;
-    return this->_data[this->convert_to_offset(coord_new)] ;
+    return (*this->_data)[this->convert_to_offset(coord_new)] ;
 }
 
 template<class T>
 const T& Matrix<T>::operator () (const std::vector<size_t>& coord) const
 {   std::vector<size_t> coord_new = this->swap_coord(coord) ;
-    return this->_data[this->convert_to_offset(coord_new)] ;
+    return (*this->_data)[this->convert_to_offset(coord_new)] ;
 }
 
 

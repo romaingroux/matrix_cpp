@@ -1,20 +1,37 @@
 #ifndef MATRIX2D_HPP
 #define MATRIX2D_HPP
 
-#include "Matrix.hpp"
+#include <Matrix.hpp>
 
 #include <vector>
 #include <string>
-#include <fstream>  // ifstream
+#include <utility>    // std::move()
+#include <fstream>    // ifstream
 #include <iostream>
-#include <iomanip>  // setw(), setprecision(), fixed
-#include <sstream>  // istringstream
-#include <stdexcept> // runtime_error, out_of_range
+#include <iomanip>   //  setw(), setprecision(), fixed
+#include <sstream>   //  istringstream
+#include <stdexcept> //  runtime_error, out_of_range
 
 #define BUFFER_SIZE 4096
 
 /*! The Matrix2D class is a specialisation of the Matrix
  * class to make work with 2D matrices easier.
+ *
+ *
+ * A format to save a Matrix2D objects in a binary file is defined. The following values
+ * are written :
+ * 1x size_t :     the number <N> of dimensions of the Matrix stored. This is the value
+ *                 of _dim_size field. This value must be 2 otherwise this is not a 2D
+ *                 matrix.
+ * 2x size_t :     the width of the matrix in each dimension. These values correspond
+ *                 to the content of the _dim vector and can be loaded inside this
+ *                 vector as they are.
+ * Dx <T> values : the <D> values contained in the matrix, in the _data vector.
+ *                 These values can be loaded directly in this vector. <D> is equal to the
+ *                 product of the 2 values stored right before. The type <T> depends on
+ *                 the type of the data stored in the matrix. The 1st of the D values is
+ *                 also the first value of the _data vector.
+ *
  *
  * A text format is defined to store such matrices.
  * In this format, each row is written on a single line
@@ -38,10 +55,7 @@ class Matrix2D : public Matrix<T>
 {
     public:
         // constructors
-        /*!
-         * \brief Default constructor, initialises an empty matrix.
-         */
-        Matrix2D() ;
+        Matrix2D() = default ;
         /*!
          * \brief Constructs a matrix with the given dimensions,
          * filled with 0 values.
@@ -60,9 +74,14 @@ class Matrix2D : public Matrix<T>
         Matrix2D(size_t nrow, size_t ncol, T value) ;
         /*!
          * \brief Copy constructor
-         * \param other the matrix to copy the content from.
+         * \param other the matrix to copy the values from.
          */
         Matrix2D(const Matrix2D& other) ;
+        /*!
+         * \brief Move constructor
+         * \param other the matrix to use the values from.
+         */
+        Matrix2D(Matrix2D&& other) ;
         /*!
          * \brief Constructs a matrix from a text file. A matrix contructed
          * from an empty file (or a file containing only one EOL char) returns
@@ -71,18 +90,25 @@ class Matrix2D : public Matrix<T>
          * \throw std::runtime_error if anything happen while reading the
          * file (format error, file not found, etc).
          */
-        Matrix2D(const std::string& file_address) throw (std::runtime_error) ;
+        Matrix2D(const std::string& file_address) ;
 
         /*!
          * \brief Destructor.
          */
-        virtual ~Matrix2D() = default ;
+        virtual ~Matrix2D() ;
 
         // methods overloaded in Matrix
         using Matrix<T>::get ;
         using Matrix<T>::set ;        
 
         // methods
+        /*!
+         * \brief loads a binary file containing
+         * a matrix.
+         * \param path the path to the file.
+         */
+        void load(const std::string& file_address) ;
+
         /*!
          * \brief Gets the element at the given coordinates.
          * \param row the row number of the element to set.
@@ -91,7 +117,7 @@ class Matrix2D : public Matrix<T>
          * are out of range.
          * \return the element.
          */
-        T get(size_t row, size_t col) const throw(std::out_of_range) ;
+        T get(size_t row, size_t col) const ;
         /*!
          * \brief Sets the element at the given coordinates
          * to the given value.
@@ -101,7 +127,7 @@ class Matrix2D : public Matrix<T>
          * \throw std::out_of_range exception if the coordinates
          * are out of range.
          */
-        void set(size_t row, size_t col, T value) throw (std::out_of_range) ;
+        void set(size_t row, size_t col, T value) ;
 
         /*!
          * \brief Gets the number of rows.
@@ -120,14 +146,14 @@ class Matrix2D : public Matrix<T>
          * \throw std::out_of_range if i is out of range.
          * \return the values in this row.
          */
-        std::vector<T> get_row(size_t i) const throw (std::out_of_range) ;
+        std::vector<T> get_row(size_t i) const ;
         /*!
          * \brief Gets the values in the i-th column.
          * \param i the column of interest.
          * \throw std::out_of_range if i is out of range.
          * \return the values in this column.
          */
-        std::vector<T> get_col(size_t i) const throw (std::out_of_range) ;
+        std::vector<T> get_col(size_t i) const ;
 
         /*!
          * \brief Sets the values of a given rows with the values of a given
@@ -138,7 +164,7 @@ class Matrix2D : public Matrix<T>
          * \throw std::invalid_argument if values does not have a length equal
          * to the number of columns of the matrix.
          */
-        void set_row(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
+        void set_row(size_t i, const std::vector<T>& values) ;
         /*!
          * \brief Sets the values of a given column with the values of a given
          * vector.
@@ -148,7 +174,7 @@ class Matrix2D : public Matrix<T>
          * \throw std::invalid_argument if values does not have a length equal
          * to the number of rows of the matrix.
          */
-        void set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument) ;
+        void set_col(size_t i, const std::vector<T>& values) ;
 
         /*!
          * \brief Produces a nice representation of the matrix on the given
@@ -161,6 +187,20 @@ class Matrix2D : public Matrix<T>
         virtual void print(std::ostream& stram, size_t precision=4, size_t width=8, char sep=' ') const override ;
 
         // operators
+        /*!
+         * Assignment operator.
+         * \param other an other matrix to copy the values from.
+         * \return a reference to the current the instance.
+         */
+        Matrix2D<T>& operator = (const Matrix2D<T>& other) ;
+
+        /*!
+         * Move Assignment operator.
+         * \param other an other matrix to use the values from.
+         * \return a reference to the instance.
+         */
+        Matrix2D<T>& operator = (Matrix2D<T>&& other) ;
+
         /*!
          * \brief Returns a reference to the corrresponding
          * element. This method does not perform any check on
@@ -180,6 +220,42 @@ class Matrix2D : public Matrix<T>
          * \return a const reference to this element.
          */
         const T& operator () (size_t row, size_t col) const ;
+
+    private:
+        /*!
+         * \brief Converts a pair of VALID (x,y) coordinates to a
+         * the corresponding offset allowing to get an element in the
+         * data vector.
+         * \param row the row index.
+         * \param col the column index.
+         * \return the corresponding offset.
+         */
+        size_t convert_to_offset(size_t row, size_t col) const ;
+
+        /*!
+         * \brief Computes and stores the offsets at which
+         * each row start.
+         */
+        void compute_row_offsets() ;
+
+        /*!
+         * \brief Computes and stores the offsets at which
+         * each row start.
+         */
+        void compute_col_offsets() ;
+
+        /*!
+         * \brief Contains the offsets at which each row starts.
+         * Each element corresponds to the corresponding rows
+         * (1st element -> 1st row).
+         */
+        std::vector<size_t> _row_offsets ;
+        /*!
+         * \brief Contains the offsets at which each row starts.
+         * Each element corresponds to the corresponding rows
+         * (1st element -> 1st row).
+         */
+        std::vector<size_t> _col_offsets ;
 
 } ;
 
@@ -231,7 +307,7 @@ const Matrix2D<T> operator * (Matrix2D<T> m, T value)
  * \return the resulting matrix.
  */
 template<class T>
-const Matrix2D<T> operator / (Matrix2D<T> m, T value) throw (std::invalid_argument)
+const Matrix2D<T> operator / (Matrix2D<T> m, T value)
 {   if(value == static_cast<T>(0))
     {   throw std::invalid_argument("division by 0!") ; }
     Matrix2D<T> other(m) ;
@@ -274,34 +350,42 @@ Matrix2D<T> transpose(const Matrix2D<T>& m)
     return m2 ;
 }
 
-template<class T>
-Matrix2D<T>::Matrix2D()
-    : Matrix<T>()
-{}
 
 template<class T>
 Matrix2D<T>::Matrix2D(size_t nrow, size_t ncol)
-    : Matrix2D<T>(nrow, ncol, 0)
+    : Matrix2D<T>(nrow, ncol, static_cast<T>(0))
 {}
 
 template<class T>
 Matrix2D<T>::Matrix2D(size_t nrow, size_t ncol, T value)
-     : Matrix<T>({nrow, ncol}, value)
-{}
+     : Matrix<T>({nrow, ncol}, value),
+       _row_offsets(nrow),
+       _col_offsets(ncol)
+{   this->compute_row_offsets() ;
+    this->compute_col_offsets() ;
+}
 
 template<class T>
 Matrix2D<T>::Matrix2D(const Matrix2D<T>& other)
     : Matrix<T>(other)
-{}
+{   this->_row_offsets = other._row_offsets ;
+    this->_col_offsets = other._col_offsets ;
+}
 
 template<class T>
-Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error)
-//    : Matrix<T>({0,0})
+Matrix2D<T>::Matrix2D(Matrix2D&& other)
+    : Matrix<T>(std::move(other))
+{   this->_row_offsets = other._row_offsets ;
+    this->_col_offsets = other._col_offsets ;
+}
+
+template<class T>
+Matrix2D<T>::Matrix2D(const std::string &file_address)
 {
     this->_dim       = {0,0} ;
-    this->_data      = std::vector<T>() ;
+    this->_data      = new std::vector<T>() ;
     this->_dim_size  = this->_dim.size() ;
-    this->_data_size = this->_data.size() ;
+    this->_data_size = this->_data->size() ;
     this->_dim_prod  = std::vector<size_t>(this->_dim_size, 0) ;
 
     std::ifstream file(file_address, std::ifstream::in) ;
@@ -362,7 +446,7 @@ Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error
         }
         // update matrix content
         for(auto i : buffer_vec)
-        {   this->_data.push_back(i) ;
+        {   this->_data->push_back(i) ;
             this->_data_size++ ;
         }
         this->_dim[1]++ ;
@@ -372,12 +456,36 @@ Matrix2D<T>::Matrix2D(const std::string &file_address) throw (std::runtime_error
 
     this->_dim[0] = row_len ;
     this->compute_dim_product() ;
+
+    this->_row_offsets = std::vector<size_t>(this->_dim[1]) ;
+    this->_col_offsets = std::vector<size_t>(this->_dim[0]) ;
+    this->compute_row_offsets() ;
+    this->compute_col_offsets() ;
 }
 
-
+template<class T>
+Matrix2D<T>::~Matrix2D()
+{   if(this->_data != nullptr)
+    {   delete this->_data ;
+        this->_data = nullptr ;
+    }
+}
 
 template<class T>
-T Matrix2D<T>::get(size_t row, size_t col) const throw(std::out_of_range)
+void Matrix2D<T>::load(const std::string& file_address)
+{
+    Matrix<T>::load(file_address, 2) ;
+
+    this->_row_offsets = std::vector<size_t>(this->_dim[1]) ;
+    this->_col_offsets = std::vector<size_t>(this->_dim[0]) ;
+
+    this->compute_dim_product() ;
+    this->compute_row_offsets() ;
+    this->compute_col_offsets() ;
+}
+
+template<class T>
+T Matrix2D<T>::get(size_t row, size_t col) const
 {   try
     {   return this->get({row, col}) ; }
     catch(std::out_of_range& e)
@@ -386,7 +494,7 @@ T Matrix2D<T>::get(size_t row, size_t col) const throw(std::out_of_range)
 
 
 template<class T>
-void Matrix2D<T>::set(size_t row, size_t col, T value) throw(std::out_of_range)
+void Matrix2D<T>::set(size_t row, size_t col, T value)
 {   try
     {   this->set({row, col}, value) ; }
     catch(std::out_of_range& e)
@@ -405,52 +513,52 @@ size_t Matrix2D<T>::get_ncol() const
 
 
 template<class T>
-std::vector<T> Matrix2D<T>::get_row(size_t i) const throw (std::out_of_range)
+std::vector<T> Matrix2D<T>::get_row(size_t i) const
 {   if(i>=this->get_nrow())
     {   throw std::out_of_range("row index is out of range!") ; }
 
     std::vector<T> row(this->get_ncol()) ;
     for(size_t j=i*this->get_ncol(), n=0; n<this->get_ncol(); j++, n++)
-    {   row[n] = this->_data[j] ; }
+    {   row[n] = (*this->_data)[j] ; }
 
     return row ;
 }
 
 
 template<class T>
-std::vector<T> Matrix2D<T>::get_col(size_t i) const throw (std::out_of_range)
+std::vector<T> Matrix2D<T>::get_col(size_t i) const
 {   if(i>=this->get_ncol())
     {   throw std::out_of_range("column index is out of range!") ; }
 
     std::vector<T> col(this->get_nrow()) ;
     for(size_t j=i, n=0; n<this->get_nrow(); j+=this->get_ncol(), n++)
-    {   col[n] = this->_data[j] ; }
+    {   col[n] = (*this->_data)[j] ; }
 
     return col ;
 }
 
 
 template<class T>
-void Matrix2D<T>::set_row(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument)
+void Matrix2D<T>::set_row(size_t i, const std::vector<T>& values)
 {   if(i>=this->get_nrow())
     {   throw std::out_of_range("row index is out of range!") ; }
     else if(values.size() != this->get_ncol())
     {   throw std::invalid_argument("the given vector length is not equal to the number of columns!") ; }
 
     for(size_t j=i*this->get_ncol(), n=0; n<this->get_ncol(); j++, n++)
-    {   this->_data[j] = values[n] ; }
+    {   (*this->_data)[j] = values[n] ; }
 }
 
 
 template<class T>
-void Matrix2D<T>::set_col(size_t i, const std::vector<T>& values) throw (std::out_of_range, std::invalid_argument)
+void Matrix2D<T>::set_col(size_t i, const std::vector<T>& values)
 {   if(i>=this->get_ncol())
     {   throw std::out_of_range("row index is out of range!") ; }
     else if(values.size() != this->get_nrow())
     {   throw std::invalid_argument("the given vector length is not equal to the number of rows!") ; }
 
     for(size_t n=0, j=i; n<this->get_nrow(); n++, j+=this->get_ncol())
-    {   this->_data[j] = values[n] ; }
+    {   (*this->_data)[j] = values[n] ; }
 }
 
 template<class T>
@@ -470,19 +578,57 @@ void Matrix2D<T>::print(std::ostream& stream, size_t precision, size_t width, ch
 }
 
 template<class T>
-T& Matrix2D<T>::operator () (size_t row, size_t col)
-{   std::vector<size_t> coord = {col, row} ;
-    return this->_data[this->convert_to_offset(coord)] ;
+Matrix2D<T>& Matrix2D<T>::operator = (const Matrix2D<T>& other)
+{   /*
+    this->_dim           = other._dim ;
+    this->_dim_size      = other._dim_size ;
+    this->_data          = new std::vector<T>(other._data) ;
+    this->_data_size     = other._data_size ;
+    this->_dim_prod      = other._dim_prod ;
+    */
+    Matrix<T>::operator=(other) ;
+    this->_row_offsets = other._row_offsets ;
+    this->_col_offsets = other._col_offsets ;
+    return *this ;
 }
+
+template<class T>
+Matrix2D<T>& Matrix2D<T>::operator = (Matrix2D<T>&& other)
+{   Matrix<T>::operator=(std::move(other)) ;
+    this->_row_offsets = other._row_offsets ;
+    this->_col_offsets = other._col_offsets ;
+    return *this ;
+}
+
+template<class T>
+T& Matrix2D<T>::operator () (size_t row, size_t col)
+{   return (*this->_data)[this->convert_to_offset(row, col)] ; }
 
 
 template<class T>
 const T& Matrix2D<T>::operator () (size_t row, size_t col) const
-{   std::vector<size_t> coord = {col, row} ;
-    return this->_data[this->convert_to_offset(coord)] ;
+{   return (*this->_data)[this->convert_to_offset(row, col)] ; }
+
+
+
+template<class T>
+void Matrix2D<T>::compute_row_offsets()
+{   for(size_t i=0; i<this->_dim[1]; i++)
+    {   this->_row_offsets[i] = i * this->_dim_prod[1] ; }
 }
 
+template<class T>
+void Matrix2D<T>::compute_col_offsets()
+{   for(size_t i=0; i<this->_dim[0]; i++)
+    {   this->_col_offsets[i] = i * this->_dim_prod[0] ; }
+}
 
+template<class T>
+size_t Matrix2D<T>::convert_to_offset(size_t row, size_t col) const
+{
+    size_t offset = this->_row_offsets[row] + this->_col_offsets[col] ;
+    return offset ;
+}
 #endif // MATRIX2D_HPP
 
 

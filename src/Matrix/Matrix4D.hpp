@@ -1,10 +1,11 @@
 #ifndef MATRIX4D_HPP
 #define MATRIX4D_HPP
 
-#include "Matrix.hpp"
+#include <Matrix.hpp>
 
 #include <string>
 #include <vector>
+#include <utility>    // std::move()
 #include <stdexcept> // runtime_error, out_of_range
 #include <iostream>
 #include <iomanip>  // setw(), setprecision(), fixed
@@ -18,6 +19,21 @@
 /*!
  * The Matrix4D class is a specialisation of the Matrix
  * class to make work with 4D matrices more easily.
+ *
+ * A format to save a Matrix4D objects in a binary file is defined. The following values
+ * are written :
+ * 1x size_t :     the number <N> of dimensions of the Matrix stored. This is the value
+ *                 of _dim_size field. This value must be 4 otherwise this is not a 4D
+ *                 matrix.
+ * 4x size_t :     the width of the matrix in each dimension. These values correspond
+ *                 to the content of the _dim vector and can be loaded inside this
+ *                 vector as they are.
+ * Dx <T> values : the <D> values contained in the matrix, in the _data vector.
+ *                 These values can be loaded directly in this vector. <D> is equal to the
+ *                 product of the 4 values stored right before. The type <T> depends on
+ *                 the type of the data stored in the matrix. The 1st of the D values is
+ *                 also the first value of the _data vector.
+ *
  *
  * A text file format is defined to store such matrices. The specifications are as
  * follows :
@@ -56,13 +72,14 @@
  */
 template<class T>
 class Matrix4D : public Matrix<T>
-{
+{   public:
+        static size_t n_instance ;
     public:
         // constructors
         /*!
-         * \brief Default constructor, initialises an empty matrix.
+         * Default constructor.
          */
-        Matrix4D() ;
+        Matrix4D() = default ;
 
         /*!
          * \brief Constructs a matrix with the given dimensions,
@@ -73,6 +90,7 @@ class Matrix4D : public Matrix<T>
          * \param dim4 the fourth dimension.
          */
         Matrix4D(size_t dim1, size_t dim2, size_t dim3, size_t dim4) ;
+
         /*!
          * \brief Constructs a matrix with the given dimensions and
          * initialize the values to the given value.
@@ -84,11 +102,19 @@ class Matrix4D : public Matrix<T>
          * with.
          */
         Matrix4D(size_t dim1, size_t dim2, size_t dim3, size_t dim4, T value) ;
+
         /*!
          * \brief Copy constructor
          * \param other the matrix to copy the content from.
          */
         Matrix4D(const Matrix4D& other) ;
+
+        /*!
+         * \brief Mover constructor
+         * \param other the matrix to copy the content from.
+         */
+        Matrix4D(Matrix4D&& other) ;
+
         /*!
          * \brief Constructs a matrix from a text file. A matrix contructed
          * from an empty file (or a file containing only one EOL char) returns
@@ -97,18 +123,33 @@ class Matrix4D : public Matrix<T>
          * \throw std::runtime_error if anything happen while reading the
          * file (format error, file not found, etc).
          */
-        Matrix4D(const std::string& file_address) throw (std::runtime_error) ;
+        Matrix4D(const std::string& file_address) ;
 
         /*!
          * \brief Destructor.
          */
-        virtual ~Matrix4D() = default ;
+        virtual ~Matrix4D() ;
 
         // methods overloaded from Matrix
         using Matrix<T>::get ;
+
         using Matrix<T>::set ;
 
-        // methods OK
+        // methods
+        /*!
+         * \brief loads a matrix from the given binary
+         * file.
+         * \param path the path to the file to read.
+         * \param dim_n the expected number of dimensions
+         * of the matrix.
+         * \throw std::invalid_argument if the dimensionality
+         * of the matrix stored in the file is not equal to
+         * the expected number of dimensions and
+         * std::runtime_error if any reading error
+         * occures.
+         */
+        void load(const std::string& file_address) ;
+
         /*!
          * \brief Gets the element at the given coordinates.
          * \param dim1 the first dimension coordinate.
@@ -119,7 +160,8 @@ class Matrix4D : public Matrix<T>
          * are out of range.
          * \return the element.
          */
-        T get(size_t dim1, size_t dim2, size_t dim3, size_t dim4) const throw (std::out_of_range) ;
+        T get(size_t dim1, size_t dim2, size_t dim3, size_t dim4) const ;
+
         /*!
          * \brief Sets the element at the given coordinates
          * to the given value.
@@ -131,7 +173,8 @@ class Matrix4D : public Matrix<T>
          * \throw std::out_of_range exception if the coordinates
          * are out of range.
          */
-        void set(size_t dim1, size_t dim2, size_t dim3, size_t dim4, T value) throw (std::out_of_range) ;
+        void set(size_t dim1, size_t dim2, size_t dim3, size_t dim4, T value) ;
+
         /*!
          * \brief Produces a nice representation of the matrix on the given
          * stream.
@@ -142,7 +185,21 @@ class Matrix4D : public Matrix<T>
          */
         virtual void print(std::ostream& stream, size_t precision=4 ,size_t width=8, char sep=' ') const override ;
 
-        // operators OK
+        // operators
+        /*!
+         * Assignment operator.
+         * \param other an other matrix to copy the values from.
+         * \return a reference to the current the instance.
+         */
+        Matrix4D& operator = (const Matrix4D& other) ;
+
+        /*!
+         * Move Assignment operator.
+         * \param other an other matrix to use the values from.
+         * \return a reference to the instance.
+         */
+        Matrix4D& operator = (Matrix4D&& other) ;
+
         /*!
          * \brief Returns a reference to the corrresponding
          * element. This method does not perform any check on
@@ -154,6 +211,7 @@ class Matrix4D : public Matrix<T>
          * \return a reference to this element.
          */
         T& operator() (size_t dim1, size_t dim2, size_t dim3, size_t dim4) ;
+
         /*!
          * \brief Returns a reference to the corrresponding
          * element. This method does not perform any check on
@@ -213,7 +271,71 @@ class Matrix4D : public Matrix<T>
          * stream was a 4D header.
          */
         bool get_3d_slice(const std::string& file_name, std::ifstream& file,
-                          std::vector<T>& data, std::vector<size_t>& dim) const throw (std::runtime_error) ;
+                          std::vector<T>& data, std::vector<size_t>& dim) const ;
+
+        /*!
+         * \brief Converts a quadruplet of VALID (dim1, dim2, dim3, dim4)
+         * coordinates to a the corresponding offset allowing to get an
+         * element in the data vector.
+         * \param dim1 the index of the 1st dimension slice.
+         * \param dim2 the index of the 2nd dimension slice.
+         * \param dim3 the index of the 3rd dimension slice.
+         * \param dim4 the index of the 4th dimension slice.
+         * \return the corresponding offset.
+         */
+        size_t convert_to_offset(size_t dim1,
+                                 size_t dim2,
+                                 size_t dim3,
+                                 size_t dim4) const ;
+
+        /*!
+         * \brief Computes and stores the offsets at which
+         * each slice on the 1st dimension starts.
+         */
+        void compute_dim1_offsets() ;
+
+        /*!
+         * \brief Computes and stores the offsets at which
+         * each slice on the 2nd dimension starts.
+         */
+        void compute_dim2_offsets() ;
+
+        /*!
+         * \brief Computes and stores the offsets at which
+         * each slice on the 3rd dimension starts.
+         */
+        void compute_dim3_offsets() ;
+
+        /*!
+         * \brief Computes and stores the offsets at which
+         * each slice on the 4th dimension starts.
+         */
+        void compute_dim4_offsets() ;
+
+        /*!
+         * \brief Contains the offsets at which each dim1 slice
+         * starts. Each element corresponds to the corresponding
+         * dim1 slice (1st element -> 1st dim1 slice).
+         */
+        std::vector<size_t> _dim1_offsets ;
+        /*!
+         * \brief Contains the offsets at which each dim2 slice
+         * starts. Each element corresponds to the corresponding
+         * y slice (1st element -> 1st dim2 slice).
+         */
+        std::vector<size_t> _dim2_offsets ;
+        /*!
+         * \brief Contains the offsets at which each dim3 slice
+         * starts. Each element corresponds to the corresponding
+         * x slice (1st element -> 1st dim3 slice).
+         */
+        std::vector<size_t> _dim3_offsets ;
+        /*!
+         * \brief Contains the offsets at which each dim4 slice
+         * starts. Each element corresponds to the corresponding
+         * x slice (1st element -> 1st dim4 slice).
+         */
+        std::vector<size_t> _dim4_offsets ;
 
 } ;
 
@@ -265,7 +387,7 @@ const Matrix4D<T> operator * (Matrix4D<T> m, T value)
  * \return the resulting matrix.
  */
 template<class T>
-const Matrix4D<T> operator / (Matrix4D<T> m, T value) throw (std::invalid_argument)
+const Matrix4D<T> operator / (Matrix4D<T> m, T value)
 {   if(value == static_cast<T>(0))
     {   throw std::invalid_argument("division by 0!") ; }
     Matrix4D<T> other(m) ;
@@ -289,31 +411,47 @@ std::ostream& operator << (std::ostream& stream, const Matrix4D<T>& m)
 
 // method implementation
 template<class T>
-Matrix4D<T>::Matrix4D()
-    : Matrix<T>()
-{}
-
-template<class T>
 Matrix4D<T>::Matrix4D(size_t dim1, size_t dim2, size_t dim3, size_t dim4)
-    : Matrix<T>({dim1, dim2, dim3, dim4}, 0)
-{}
+    : Matrix4D<T>(dim1, dim2, dim3, dim4, 0)
+{ ; }
 
 template<class T>
 Matrix4D<T>::Matrix4D(size_t dim1, size_t dim2, size_t dim3, size_t dim4, T value)
-    : Matrix<T>({dim1, dim2, dim3, dim4}, value)
-{}
+    : Matrix<T>({dim1, dim2, dim3, dim4}, value),
+      _dim1_offsets(dim1),
+      _dim2_offsets(dim2),
+      _dim3_offsets(dim3),
+      _dim4_offsets(dim4)
+{   this->compute_dim1_offsets() ;
+    this->compute_dim2_offsets() ;
+    this->compute_dim3_offsets() ;
+    this->compute_dim4_offsets() ;
+}
 
 template<class T>
 Matrix4D<T>::Matrix4D(const Matrix4D &other)
     : Matrix<T>(other)
-{}
+{   this->_dim1_offsets = other._dim1_offsets ;
+    this->_dim2_offsets = other._dim2_offsets ;
+    this->_dim3_offsets = other._dim3_offsets ;
+    this->_dim4_offsets = other._dim4_offsets ;
+}
 
 template<class T>
-Matrix4D<T>::Matrix4D(const std::string &file_address) throw (std::runtime_error)
+Matrix4D<T>::Matrix4D(Matrix4D &&other)
+    : Matrix<T>(std::move(other))
+{   this->_dim1_offsets = other._dim1_offsets ;
+    this->_dim2_offsets = other._dim2_offsets ;
+    this->_dim3_offsets = other._dim3_offsets ;
+    this->_dim4_offsets = other._dim4_offsets ;
+}
+
+template<class T>
+Matrix4D<T>::Matrix4D(const std::string &file_address)
 {   this->_dim       = {0,0,0,0} ;
-    this->_data      = std::vector<T>() ;
+    this->_data      = new std::vector<T>() ;
     this->_dim_size  = this->_dim.size() ;
-    this->_data_size = this->_data.size() ;
+    this->_data_size = this->_data->size() ;
     this->_dim_prod  = std::vector<size_t>(this->_dim_size, 0) ;
 
     std::ifstream file(file_address, std::ifstream::in) ;
@@ -329,6 +467,7 @@ Matrix4D<T>::Matrix4D(const std::string &file_address) throw (std::runtime_error
 
     // read 1st line
     getline(file, buffer_str) ;
+
     // empty line
     if(buffer_str.size() == 0)
     {   // this file only contains one eol char and should be considered as empty,
@@ -374,7 +513,7 @@ Matrix4D<T>::Matrix4D(const std::string &file_address) throw (std::runtime_error
                 found_4d_header = this->get_3d_slice(file_address, file, buffer_t, dim);
                 // update data
                 for(const auto& i : buffer_t)
-                {   this->_data.push_back(i) ;
+                {   this->_data->push_back(i) ;
                     this->_data_size++ ;
                 }
                 // update dim only for the 1st slice (the 1st slice set the dimensions)
@@ -413,10 +552,43 @@ Matrix4D<T>::Matrix4D(const std::string &file_address) throw (std::runtime_error
 
     file.close() ;
     this->compute_dim_product() ;
+
+    this->_dim1_offsets = std::vector<size_t>(this->_dim[1]) ;
+    this->_dim2_offsets = std::vector<size_t>(this->_dim[0]) ;
+    this->_dim3_offsets = std::vector<size_t>(this->_dim[2]) ;
+    this->_dim4_offsets = std::vector<size_t>(this->_dim[3]) ;
+    this->compute_dim1_offsets() ;
+    this->compute_dim2_offsets() ;
+    this->compute_dim3_offsets() ;
+    this->compute_dim4_offsets() ;
 }
 
 template<class T>
-T Matrix4D<T>::get(size_t dim1, size_t dim2, size_t dim3, size_t dim4) const throw (std::out_of_range)
+Matrix4D<T>::~Matrix4D()
+{   if(this->_data != nullptr)
+    {   delete this->_data ;
+        this->_data = nullptr ;
+    }
+}
+
+template<class T>
+void Matrix4D<T>::load(const std::string& file_address)
+{
+    Matrix<T>::load(file_address, 4) ;
+
+    this->_dim1_offsets = std::vector<size_t>(this->_dim[1]) ;
+    this->_dim2_offsets = std::vector<size_t>(this->_dim[0]) ;
+    this->_dim3_offsets = std::vector<size_t>(this->_dim[2]) ;
+    this->_dim4_offsets = std::vector<size_t>(this->_dim[3]) ;
+
+    this->compute_dim1_offsets() ;
+    this->compute_dim2_offsets() ;
+    this->compute_dim3_offsets() ;
+    this->compute_dim4_offsets() ;
+}
+
+template<class T>
+T Matrix4D<T>::get(size_t dim1, size_t dim2, size_t dim3, size_t dim4) const
 {   try
     {   return this->get({dim1, dim2, dim3, dim4}) ; }
     catch(std::out_of_range& e)
@@ -424,7 +596,7 @@ T Matrix4D<T>::get(size_t dim1, size_t dim2, size_t dim3, size_t dim4) const thr
 }
 
 template<class T>
-void Matrix4D<T>::set(size_t dim1, size_t dim2, size_t dim3, size_t dim4, T value) throw (std::out_of_range)
+void Matrix4D<T>::set(size_t dim1, size_t dim2, size_t dim3, size_t dim4, T value)
 {   try
     {   this->set({dim1, dim2, dim3, dim4}, value) ; }
     catch(std::out_of_range& e)
@@ -442,7 +614,7 @@ void Matrix4D<T>::print(std::ostream &stream, size_t precision, size_t width, ch
     std::vector<size_t> dim = this->get_dim() ;
 
     size_t    n  = 0 ;
-    size_t n_tot = std::accumulate(dim.begin(), dim.end(), 1, std::multiplies<int>()) ;
+    size_t n_tot = std::accumulate(dim.begin(), dim.end(), (size_t)1, std::multiplies<int>()) ;
 
     for(size_t dim4=0; dim4<dim[3]; dim4++)
     {   stream << ",,," << dim4 << std::endl ;
@@ -459,18 +631,40 @@ void Matrix4D<T>::print(std::ostream &stream, size_t precision, size_t width, ch
     }
 }
 
+template<class T>
+Matrix4D<T>& Matrix4D<T>::operator = (const Matrix4D<T>& other)
+{   /*
+    this->_dim           = other._dim ;
+    this->_dim_size      = other._dim_size ;
+    this->_data          = new std::vector<T>(*(other._data)) ;
+    this->_data_size     = other._data_size ;
+    this->_dim_prod      = other._dim_prod ;
+    */
+    Matrix<T>::operator=(other) ;
+    this->_dim1_offsets = other._dim1_offsets ;
+    this->_dim2_offsets = other._dim2_offsets ;
+    this->_dim3_offsets = other._dim3_offsets ;
+    this->_dim4_offsets = other._dim4_offsets ;
+    return *this ;
+}
+
+template<class T>
+Matrix4D<T>& Matrix4D<T>::operator = (Matrix4D<T>&& other)
+{   Matrix<T>::operator=(std::move(other)) ;
+    this->_dim1_offsets = other._dim1_offsets ;
+    this->_dim2_offsets = other._dim2_offsets ;
+    this->_dim3_offsets = other._dim3_offsets ;
+    this->_dim4_offsets = other._dim4_offsets ;
+    return *this ;
+}
 
 template<class T>
 T& Matrix4D<T>::operator () (size_t dim1, size_t dim2, size_t dim3, size_t dim4)
-{   std::vector<size_t> coord = {dim2, dim1, dim3, dim4} ;
-    return this->_data[this->convert_to_offset(coord)] ;
-}
+{   return (*this->_data)[this->convert_to_offset(dim1, dim2, dim3, dim4)] ; }
 
 template<class T>
 const T& Matrix4D<T>::operator () (size_t dim1, size_t dim2, size_t dim3, size_t dim4) const
-{   std::vector<size_t> coord = {dim2, dim1, dim3, dim4} ;
-    return this->_data[this->convert_to_offset(coord)] ;
-}
+{   return (*this->_data)[this->convert_to_offset(dim1, dim2, dim3, dim4)] ; }
 
 template<class T>
 bool Matrix4D<T>::is_header_3d(const std::string &str) const
@@ -493,7 +687,7 @@ bool Matrix4D<T>::is_header_4d(const std::string &str) const
 
 template<class T>
 bool Matrix4D<T>::get_3d_slice(const std::string& file_name, std::ifstream& file,
-                               std::vector<T> &data, std::vector<size_t> &dim) const throw (std::runtime_error)
+                               std::vector<T> &data, std::vector<size_t> &dim) const
 {
     bool found_4d_header = false ; // the flag to return
 
@@ -598,5 +792,48 @@ bool Matrix4D<T>::get_3d_slice(const std::string& file_name, std::ifstream& file
     return found_4d_header ;
 }
 
+template<class T>
+void Matrix4D<T>::compute_dim1_offsets()
+{   for(size_t i=0; i<this->_dim[1]; i++)
+    {   this->_dim1_offsets[i] = i * this->_dim_prod[1] ; }
+}
+
+template<class T>
+void Matrix4D<T>::compute_dim2_offsets()
+{   for(size_t i=0; i<this->_dim[0]; i++)
+    {   this->_dim2_offsets[i] = i * this->_dim_prod[0] ; }
+}
+
+template<class T>
+void Matrix4D<T>::compute_dim3_offsets()
+{   for(size_t i=0; i<this->_dim[2]; i++)
+    {   this->_dim3_offsets[i] = i * this->_dim_prod[2] ; }
+}
+
+template<class T>
+void Matrix4D<T>::compute_dim4_offsets()
+{   for(size_t i=0; i<this->_dim[3]; i++)
+    {   this->_dim4_offsets[i] = i * this->_dim_prod[3] ; }
+}
+
+template<class T>
+size_t Matrix4D<T>::convert_to_offset(size_t dim1,
+                                      size_t dim2,
+                                      size_t dim3,
+                                      size_t dim4) const
+{   /*
+    size_t offset = 0 ;
+
+    for(size_t i=0; i<this->_dim_size; i++)
+    {   offset += coord[i] * this->_dim_prod[i] ; }
+
+    return offset ;
+    */
+    size_t offset = this->_dim1_offsets[dim1] +
+                    this->_dim2_offsets[dim2] +
+                    this->_dim3_offsets[dim3] +
+                    this->_dim4_offsets[dim4] ;
+    return offset ;
+}
 
 #endif // MATRIX4D_HPP
